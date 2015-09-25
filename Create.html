@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Create{% endblock %}
+{% block head %}
+<div id="alert"></div>
+<div class="panel panel-default">
+    <div class="panel-heading">Create a Connexus Stream</div>
+    <div class="panel-body">
+        <form role="form" action="create.action" method="post">
+            <div class="form-group col-md-6">
+                <input type="text" id="stream_name" name="name" class="form-control" placeholder="Lucknow Christian College">
+                <label>Name your stream</label>
+            </div>
+            <div class="form-group col-md-6">
+                <textarea id="stream_tags" class="form-control" name="tags" rows="3" placeholder="#LucknowChristianCollege, #1985, #AdnansFriends, #FB:schools.india.LCC"></textarea>
+                <label>Tag your stream (comma separated)</label>
+            </div>
+            <div class="form-group col-md-6">
+                <textarea id="stream_subscribers" class="form-control" name="subscribers" rows="3" placeholder="adnan@aziz.com, alephone@facebook.com, adnansmom@lycos.com"></textarea>
+                <div style="margin-top: 10px;"></div>
+                <textarea id="stream_msg" class="form-control" name="msg" rows="3" placeholder="Optional message for invitation"></textarea>
+                <label>Add subscribers*</label>
+            </div>
+            <div class="form-group col-md-6">
+                <input type="text" id="stream_url" class="form-control" name ="cover_url" placeholder="http://flickr.com/tiger-image.png">
+                <label>URL to cover image (optional)</label>
+            </div>
+            <div class="form-group col-md-12">
+                <button type="submit" id="create_btn" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> Create Stream</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="push"></div>
+{% endblock %}
