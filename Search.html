@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Error{% endblock %}
+{% block head %}
+<div id="alert"></div>
+<div class="panel panel-default">
+    <div class="panel-heading">Search Streams
+        <a style="cursor: pointer;" title="<strong>Hint:</strong> <br/> We support autocomplete. Just start typing...<br/>You can also search streams by author's email, like &#8594;author: test@example.com <br/>The result is the top 5 existing matches!">
+            <i class="glyphicon glyphicon-question-sign"></i>
+        </a>
+    </div>
+    <div class="panel-body">
+        <form method="post" action="search.action">
+            <label>Search</label>
+            <input type="text" id="query" value="" name="param" class="form-control" placeholder="Type search keywords here">
+            <div style="margin-top: 16px;"></div>
+            <button id="search_btn" type="submit" class="btn btn-primary">&nbsp;
+                <i class="glyphicon glyphicon-search"></i> Search &nbsp;
+            </button>
+        </form>
+    </div>
+</div>
+<div class="push"></div>
+{% endblock %}
