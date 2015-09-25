@@ -8,9 +8,14 @@
     <div class="panel-heading">Streams I Own</div>
         <div class="panel-body">
             {% if myStreamList %}
+                <form action="/manage" method="post">
                 {% for myStream in myStreamList %}
-                    {{ myStream.name }}
+                    <p> {{ myStream.name }}
+                        <input name="{{myStream.name}}" type="checkbox">
+                    </p>
                 {% endfor %}
+                <input type="submit" value="Delete selected streams">
+                </form>
             {% else %}
                 You do not have any streams yet. Create some now!
                 <button type="submit" onclick="location.href = '/create'">

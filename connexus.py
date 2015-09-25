@@ -19,6 +19,7 @@ class Stream(ndb.Model):
     name = ndb.StringProperty()
     inviteMsg = ndb.StringProperty(indexed = False)
     coverUrl = ndb.StringProperty(indexed=False)
+    time = ndb.DateTimeProperty(auto_now_add=True)
 class Image(ndb.Model):
     name = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
@@ -78,6 +79,24 @@ class ManagePage(webapp2.RequestHandler):
             }
             template = JINJA_ENVIRONMENT.get_template('Manage.html')
             self.response.write(template.render(template_values))
+    def post(self):
+        user = users.get_current_user()
+        if user:
+            myStreamList = Stream.query(Stream.owner.email == user.nickname()).fetch()
+            for myStream in myStreamList:
+                check = self.request.get(myStream.name)
+                if check=='on':
+                    myStream.key.delete()
+
+
+            # template_values = {
+            #     'myStreamList': myStreamList,
+            #     'subscribeStreamList': subscribeStreamList,
+            # }
+            template = JINJA_ENVIRONMENT.get_template('Manage.html')
+            self.response.write(template.render({}))
+
+
 class CreatePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
