@@ -8,20 +8,23 @@
     <div class="panel-heading">Streams I Own</div>
         <div class="panel-body">
             {% if myStreamList %}
-                {% for myStream in myStreamList %}
-                    myStream.name
-                {% endfor %}
+
+
+
             {% else %}
                 You do not have any streams yet. Create some now!
+                <button type="submit" onclick="location.href = '/create'">
+                    Create Stream
+                </button>
             {% endif %}
         </div>
     <div class="panel panel-default">
         <div class="panel-heading">Streams I Subscribe to</div>
         <div class="panel-body">
             {% if subscribeStreamList %}
-                {% for subscribeStream in subscribeStreamList %}
-                    subscribeStream.name
-                {% endfor %}
+
+
+
             {% else %}
                 You do not have any subscriptions yet. Subscribe to some today!
             {% endif %}

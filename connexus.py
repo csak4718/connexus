@@ -17,7 +17,8 @@ class Owner(ndb.Model):
 class Stream(ndb.Model):
     owner = ndb.StructuredProperty(Owner)
     name = ndb.StringProperty()
-    coverImageUrl = ndb.StringProperty(indexed=False)
+    inviteMsg = ndb.StringProperty(indexed = False)
+    coverUrl = ndb.StringProperty(indexed=False)
 class Image(ndb.Model):
     name = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
@@ -33,7 +34,7 @@ class Tag(ndb.Model):
     stream = ndb.StructuredProperty(Stream)
 
 
-class Landing(webapp2.RequestHandler):
+class LandingPage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user();
         if user:
@@ -57,17 +58,19 @@ class Landing(webapp2.RequestHandler):
             template = JINJA_ENVIRONMENT.get_template('index.html')
             self.response.write(template.render(template_values))
 
-class Manage(webapp2.RequestHandler):
+class ManagePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
         if user:
             myStreamList = Stream.query(Stream.owner.email == user.nickname()).get()
+            print myStreamList
 
             subscribeStreamList = []
             lst = Subscriber.query(Subscriber.email == user.nickname()).get()
             if lst:
                 for elem in lst:
                     subscribeStreamList.append(elem.stream)
+                print subscribeStreamList
 
             template_values = {
                 'myStreamList': myStreamList,
@@ -75,10 +78,50 @@ class Manage(webapp2.RequestHandler):
             }
             template = JINJA_ENVIRONMENT.get_template('Manage.html')
             self.response.write(template.render(template_values))
+class CreatePage(webapp2.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if user:
+            template = JINJA_ENVIRONMENT.get_template('Create.html')
+            self.response.write(template.render({}))
+    def post(self):
+        user = users.get_current_user()
+        if user:
+            name = self.request.get('name')
+            inviteMsg = self.request.get('msg')
+            coverUrl = self.request.get('cover_url')
+            tagsString = self.request.get('tags')
+            subscribersString = self.request.get('subscribers')
 
+            owner = Owner()
+            owner.email = user.nickname()
+            owner.put()
 
+            stream = Stream()
+            stream.owner = owner
+            stream.name = name
+            stream.inviteMsg = inviteMsg
+            stream.coverUrl = coverUrl
+            stream.put()
+
+            tagsList = tagsString.split(', ')
+            for item in tagsList:
+                tag = Tag()
+                tag.name = item
+                tag.stream = stream
+                tag.put()
+
+            subscribersList = subscribersString.split(', ')
+            for item in subscribersList:
+                subscriber = Subscriber()
+                subscriber.email = item
+                subscriber.stream = stream
+                subscriber.put()
+
+            self.redirect('/manage')
 
 app = webapp2.WSGIApplication([
-    ('/', Landing),
-    ('/manage', Manage),
+    ('/', LandingPage),
+    ('/manage', ManagePage),
+    ('/create', CreatePage),
 ], debug=True)
