@@ -27,9 +27,14 @@
         <div class="panel-heading">Streams I Subscribe to</div>
         <div class="panel-body">
             {% if subscribeStreamList %}
+                <form action="/manage" method="post">
                 {% for subscribeStream in subscribeStreamList %}
-                    {{ subscribeStream.name }}
+                    <p> {{ subscribeStream.name }}
+                        <input name="{{subscribeStream.name}}" type="checkbox">
+                    </p>
                 {% endfor %}
+                <input type="submit" value="Unsubscribe selected streams">
+                </form>
             {% else %}
                 You do not have any subscriptions yet. Subscribe to some today!
             {% endif %}

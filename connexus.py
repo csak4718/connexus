@@ -64,13 +64,16 @@ class ManagePage(webapp2.RequestHandler):
         user = users.get_current_user()
         if user:
             myStreamList = Stream.query(Stream.owner.email == user.nickname()).fetch()
+            print "myStreamList:"
             print myStreamList
+            print
 
             subscribeStreamList = []
             lst = Subscriber.query(Subscriber.email == user.nickname()).fetch()
             if lst:
                 for elem in lst:
                     subscribeStreamList.append(elem.stream)
+                print "subscribeStreamList:"
                 print subscribeStreamList
 
             template_values = {
@@ -83,18 +86,31 @@ class ManagePage(webapp2.RequestHandler):
         user = users.get_current_user()
         if user:
             myStreamList = Stream.query(Stream.owner.email == user.nickname()).fetch()
+
+            subscribeStreamList = []
+            lst = Subscriber.query(Subscriber.email == user.nickname()).fetch()
+            if lst:
+                for elem in lst:
+                    subscribeStreamList.append(elem.stream)
+
+
             for myStream in myStreamList:
                 check = self.request.get(myStream.name)
                 if check=='on':
                     myStream.key.delete()
 
+            for subscribeStream in subscribeStreamList:
+                check = self.request.get(subscribeStream.name)
+                if check=='on':
+                    subscribeStream.key.delete()
 
-            # template_values = {
-            #     'myStreamList': myStreamList,
-            #     'subscribeStreamList': subscribeStreamList,
-            # }
+
+            template_values = {
+                'myStreamList': myStreamList,
+                'subscribeStreamList': subscribeStreamList,
+            }
             template = JINJA_ENVIRONMENT.get_template('Manage.html')
-            self.response.write(template.render({}))
+            self.response.write(template.render(template_values))
 
 
 class CreatePage(webapp2.RequestHandler):
