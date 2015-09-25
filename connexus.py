@@ -155,8 +155,16 @@ class CreatePage(webapp2.RequestHandler):
 
             self.redirect('/manage')
 
+class View_all(webapp2.RequestHandler):
+    def get(self):
+        stream_list=Stream.query().order(-Stream.time)
+        template_values = {'Streams': stream_list}
+        template = JINJA_ENVIRONMENT.get_template('View_all.html')
+        self.response.write(template.render(template_values))
+
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
     ('/manage', ManagePage),
     ('/create', CreatePage),
+    ('/View_all', View_all),
 ], debug=True)
