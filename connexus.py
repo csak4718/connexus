@@ -62,11 +62,11 @@ class ManagePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
         if user:
-            myStreamList = Stream.query(Stream.owner.email == user.nickname()).get()
+            myStreamList = Stream.query(Stream.owner.email == user.nickname()).fetch()
             print myStreamList
 
             subscribeStreamList = []
-            lst = Subscriber.query(Subscriber.email == user.nickname()).get()
+            lst = Subscriber.query(Subscriber.email == user.nickname()).fetch()
             if lst:
                 for elem in lst:
                     subscribeStreamList.append(elem.stream)
