@@ -10,16 +10,28 @@
   <div class="wrapper">
       <div class="container">
           <div class="panel panel-default">
-              <div class="panel-body">
-              <div><h1 id="mast_header"> <strong> Welcome to Connexus! </strong> </h1></div>
-              <div></div>
-                  <p class="text" id="login_msg">Connexus uses Google Accounts:</p>
-              </div>
-              <div>
-                    <button type="submit" onclick="location.href = '{{log_url}}'">
-                        {{ log_url_linktext }}
-                    </button>
-              </div>
+              {% if user %}
+                <div class="panel-body">
+                <div><h1 id="mast_header"> <strong>Hi {{ user.nickname() }} <br>
+                                                  Welcome to Connexus! </strong> </h1></div>
+                    <p class="text" id="login_msg">Connexus uses Google Accounts:</p>
+                </div>
+                <div>
+                      <button type="submit" onclick="location.href = '{{log_url}}'">
+                          {{ log_url_linktext }}
+                      </button>
+                </div>
+              {% else %}
+                <div class="panel-body">
+                <div><h1 id="mast_header"> <strong> Welcome to Connexus! </strong> </h1></div>
+                    <p class="text" id="login_msg">Connexus uses Google Accounts:</p>
+                </div>
+                <div>
+                      <button type="submit" onclick="location.href = '{{log_url}}'">
+                          {{ log_url_linktext }}
+                      </button>
+                </div>
+              {% endif %}
           </div>
       </div>
   </div>
@@ -28,9 +40,6 @@
         <p>
           Designed by Group DWDL
         </p>
-        <!-- <p>
-          {{result}}
-        </p> -->
       </div>
   </footer>
   </body>
