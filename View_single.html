@@ -7,9 +7,9 @@
   {% for img in imgList %}
   <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
-      <img src="assets/NoCoverAvailable.jpg" alt="{{img.name}}">
+      <img src="assets/Water.png" alt="image">
       <div class="caption">
-        <h3>{{img.name}}</h3>
+        <h3>Image</h3>
         <p>Created at {{img.time}}</p>
       </div>
     </div>
@@ -21,6 +21,7 @@
       <img src="assets/NoCoverAvailable.jpg" alt="NoImage">
     </div>
   </div>
+{% endif %}
 </div>
 <div class="row">
   <form action="/Add_Image?streamKey={{streamKey.urlsafe()}}" enctype="multipart/form-data" method="post">
@@ -28,7 +29,7 @@
     <input class="btn btn-default" type="submit" value="Add Image">
   </form>
 </div>
-{% endif %}
+
 </div>
 
 {% endblock %}
