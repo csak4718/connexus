@@ -220,9 +220,6 @@ class AddImage(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
 
 
-
-
-
 class ErrorPage(webapp2.RequestHandler):
     def get(self):
         errorType = self.request.get('errorType')
@@ -237,6 +234,13 @@ class ErrorPage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('Error_Page.html')
         self.response.write(template.render(template_values))
 
+class ImageHandler(webapp2.RequestHandler):
+    def get(self):
+        ImageKey = ndb.Key(urlsafe=self.request.get('img_id'))
+        img = ImageKey.get()
+        self.response.headers['Content-Type'] = 'image/png'
+        self.response.out.write(img.full_size_image)
+
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
     ('/manage', ManagePage),
@@ -244,5 +248,6 @@ app = webapp2.WSGIApplication([
     ('/View_all', ViewAllPage),
     ('/View_single', ViewSinglePage),
     ('/Add_Image', AddImage),
+    ('/img', ImageHandler),
     ('/error', ErrorPage)
 ], debug=True)
