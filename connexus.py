@@ -125,41 +125,39 @@ class CreatePage(webapp2.RequestHandler):
             name = self.request.get('name')
             streamList = Stream.query(Stream.name==name).fetch()
             if len(streamList) != 0:
-                # TODO
-                # repeated stream name
-                pass
+                self.redirect('/error?errorType=0')
+            else:
+                inviteMsg = self.request.get('msg')
+                coverUrl = self.request.get('cover_url')
+                tagsString = self.request.get('tags')
+                subscribersString = self.request.get('subscribers')
 
-            inviteMsg = self.request.get('msg')
-            coverUrl = self.request.get('cover_url')
-            tagsString = self.request.get('tags')
-            subscribersString = self.request.get('subscribers')
+                owner = Owner()
+                owner.email = user.nickname()
+                owner.put()
 
-            owner = Owner()
-            owner.email = user.nickname()
-            owner.put()
+                stream = Stream()
+                stream.owner = owner
+                stream.name = name
+                stream.inviteMsg = inviteMsg
+                stream.coverUrl = coverUrl
+                stream.put()
 
-            stream = Stream()
-            stream.owner = owner
-            stream.name = name
-            stream.inviteMsg = inviteMsg
-            stream.coverUrl = coverUrl
-            stream.put()
+                tagsList = tagsString.split(', ')
+                for item in tagsList:
+                    tag = Tag()
+                    tag.name = item
+                    tag.stream = stream
+                    tag.put()
 
-            tagsList = tagsString.split(', ')
-            for item in tagsList:
-                tag = Tag()
-                tag.name = item
-                tag.stream = stream
-                tag.put()
+                subscribersList = subscribersString.split(', ')
+                for item in subscribersList:
+                    subscriber = Subscriber()
+                    subscriber.email = item
+                    subscriber.stream = stream
+                    subscriber.put()
 
-            subscribersList = subscribersString.split(', ')
-            for item in subscribersList:
-                subscriber = Subscriber()
-                subscriber.email = item
-                subscriber.stream = stream
-                subscriber.put()
-
-            self.redirect('/manage')
+                self.redirect('/manage')
 
 class ViewAllPage(webapp2.RequestHandler):
     def get(self):
@@ -190,10 +188,25 @@ class ViewSinglePage(webapp2.RequestHandler):
         view = View()
         view.stream = streamList[0]
 
+class ErrorPage(webapp2.RequestHandler):
+    def get(self):
+        errorType = self.request.get('errorType')
+        if (errorType=='0'):
+            errorMsg = "Trying to create a new stream which has the same name as an existing stream"
+        else:
+            errorMsg = "Something went wrong"
+
+        template_values = {
+            'errorMsg': errorMsg
+        }
+        template = JINJA_ENVIRONMENT.get_template('Error_Page.html')
+        self.response.write(template.render(template_values))
+
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
     ('/manage', ManagePage),
     ('/create', CreatePage),
     ('/View_all', ViewAllPage),
     ('/View_single', ViewSinglePage),
+    ('/error', ErrorPage)
 ], debug=True)
