@@ -21,7 +21,7 @@ class Stream(ndb.Model):
     coverUrl = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
 class Image(ndb.Model):
-    name = ndb.StringProperty(indexed=False)
+    # name = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
     stream = ndb.KeyProperty(kind='Stream')
 class Subscriber(ndb.Model):
@@ -67,18 +67,32 @@ class ManagePage(webapp2.RequestHandler):
             # print "myStreamList:"
             # print myStreamList
             # print
+            numViewsList_my = []
+            for elem in myStreamList:
+                viewList = View.query(View.stream == elem.key).fetch()
+                numViewsList_my.append(len(viewList))
 
             subscribeStreamList = []
+            numViewsList_sub = []
             lst = Subscriber.query(Subscriber.email == user.nickname()).fetch()
             if lst:
                 for elem in lst:
                     subscribeStreamList.append(elem.stream)
+                    viewList = View.query(View.stream == elem.stream.key).fetch()
+                    numViewsList_sub.append(len(viewList))
                 # print "subscribeStreamList:"
                 # print subscribeStreamList
 
+            my_grouped_list = zip(myStreamList, numViewsList_my)
+            sub_grouped_list = zip(subscribeStreamList, numViewsList_sub)
+
             template_values = {
+                'my_grouped_list': my_grouped_list,
+                'sub_grouped_list': sub_grouped_list,
                 'myStreamList': myStreamList,
                 'subscribeStreamList': subscribeStreamList,
+                'numViewsList_my': numViewsList_my,
+                'numViewsList_sub': numViewsList_sub,
             }
             template = JINJA_ENVIRONMENT.get_template('Manage.html')
             self.response.write(template.render(template_values))
@@ -104,10 +118,13 @@ class ManagePage(webapp2.RequestHandler):
                 if check=='on':
                     subscribeStream.key.delete()
 
+            viewList = View.query(View.stream == streamKey).fetch()
+            numViews = len(viewList)
 
             template_values = {
                 'myStreamList': myStreamList,
                 'subscribeStreamList': subscribeStreamList,
+                'numViews': numViews,
             }
             template = JINJA_ENVIRONMENT.get_template('Manage.html')
             self.response.write(template.render(template_values))
@@ -178,9 +195,9 @@ class ViewSinglePage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('View_single.html')
         self.response.write(template.render(template_values))
 
-
         view = View()
         view.stream = streamKey
+        view.put()
 
 class ErrorPage(webapp2.RequestHandler):
     def get(self):
