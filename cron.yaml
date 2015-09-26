@@ -1,0 +1,5 @@
+cron:
+- description: update trends
+  url: /.*
+  schedule: every 1 minutes
+  #schedule: every 5 minutes
