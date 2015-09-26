@@ -7,9 +7,9 @@
   {% for img in imgList %}
   <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
-      <img src="assets/NoCoverAvailable.jpg" alt="{{img.name}}">
+      <img src="{{img.full_size_image}}" alt="image">
       <div class="caption">
-        <h3>{{img.name}}</h3>
+        <h3>Image</h3>
         <p>Created at {{img.time}}</p>
       </div>
     </div>
