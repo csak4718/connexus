@@ -3,6 +3,7 @@
 {% block content %}
 
 <div class="row">
+{% if imgList %}
   {% for img in imgList %}
   <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
@@ -14,6 +15,20 @@
     </div>
   </div>
   {% endfor %}
+{% else %}
+  <div class="col-sm-6 col-md-4">
+    <div class="thumbnail">
+      <img src="assets/NoCoverAvailable.jpg" alt="NoImage">
+    </div>
+  </div>
+</div>
+<div class="row">
+  <form action="/Add_Image?streamKey={{streamKey.urlsafe()}}" enctype="multipart/form-data" method="post">
+    <div><input type="file" name="img"/></div>
+    <input class="btn btn-default" type="submit" value="Add Image">
+  </form>
+</div>
+{% endif %}
 </div>
 
 {% endblock %}
