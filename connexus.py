@@ -3,6 +3,7 @@ import urllib
 
 from google.appengine.api import users
 from google.appengine.ext import ndb
+from google.appengine.api import images
 
 import jinja2
 import webapp2
@@ -24,6 +25,7 @@ class Image(ndb.Model):
     name = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
     stream = ndb.KeyProperty(kind='Stream')
+    full_size_image = ndb.BlobProperty()
 class Subscriber(ndb.Model):
     stream = ndb.KeyProperty(kind='Stream')
     email = ndb.StringProperty()
@@ -174,6 +176,7 @@ class ViewSinglePage(webapp2.RequestHandler):
 
         template_values = {
             'imgList':imgList,
+            'streamKey': streamKey,
         }
         template = JINJA_ENVIRONMENT.get_template('View_single.html')
         self.response.write(template.render(template_values))
@@ -181,6 +184,27 @@ class ViewSinglePage(webapp2.RequestHandler):
 
         view = View()
         view.stream = streamKey
+
+class AddImage(webapp2.RequestHandler):
+    def post(self):
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+        img = Image()
+        img.stream = streamKey
+        img.full_size_image= self.request.get('img')
+        img.put()
+
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
+
+        template_values = {
+            'imgList':imgList,
+            'streamKey': streamKey,
+        }
+        template = JINJA_ENVIRONMENT.get_template('View_single.html')
+        self.response.write(template.render(template_values))
+
+
+
+
 
 class ErrorPage(webapp2.RequestHandler):
     def get(self):
@@ -202,5 +226,6 @@ app = webapp2.WSGIApplication([
     ('/create', CreatePage),
     ('/View_all', ViewAllPage),
     ('/View_single', ViewSinglePage),
+    ('/Add_Image', AddImage),
     ('/error', ErrorPage)
 ], debug=True)
