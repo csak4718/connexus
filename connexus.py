@@ -24,17 +24,17 @@ class Stream(ndb.Model):
 class Image(ndb.Model):
     # name = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
-    stream = ndb.KeyProperty(kind='Stream')
+    stream = ndb.KeyProperty(kind=Stream)
     full_size_image = ndb.BlobProperty()
 class Subscriber(ndb.Model):
-    stream = ndb.KeyProperty(kind='Stream')
+    stream = ndb.KeyProperty(kind=Stream)
     email = ndb.StringProperty()
 class View(ndb.Model):
-    stream = ndb.KeyProperty(kind='Stream')
+    stream = ndb.KeyProperty(kind=Stream)
     time = ndb.DateTimeProperty(auto_now_add=True)
 class Tag(ndb.Model):
     name = ndb.StringProperty()
-    stream = ndb.KeyProperty(kind='Stream')
+    stream = ndb.KeyProperty(kind=Stream)
 
 
 class LandingPage(webapp2.RequestHandler):
@@ -65,25 +65,20 @@ class ManagePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
         if user:
-            myStreamList = Stream.query(Stream.ownerEmail == user.nickname()).fetch()
-            # print "myStreamList:"
-            # print myStreamList
-            # print
+            myStreamList = Stream().query(Stream.ownerEmail == user.nickname())#.fetch()
             numViewsList_my = []
             for elem in myStreamList:
-                viewList = View.query(View.stream == elem.key).fetch()
-                numViewsList_my.append(len(viewList))
+                viewCount = View.query(View.stream == elem.key).count(limit=None)
+                numViewsList_my.append(viewCount)
 
             subscribeStreamList = []
             numViewsList_sub = []
-            lst = Subscriber.query(Subscriber.email == user.nickname()).fetch()
+            lst = Subscriber().query(Subscriber.email == user.nickname())#.fetch()
             if lst:
                 for elem in lst:
                     subscribeStreamList.append(elem.stream)
-                    viewList = View.query(View.stream == elem.stream.key).fetch()
-                    numViewsList_sub.append(len(viewList))
-                # print "subscribeStreamList:"
-                # print subscribeStreamList
+                    viewCount = View.query(View.stream == elem.stream).count(limit=None)
+                    numViewsList_sub.append(viewCount)
 
             my_grouped_list = zip(myStreamList, numViewsList_my)
             sub_grouped_list = zip(subscribeStreamList, numViewsList_sub)
@@ -91,45 +86,21 @@ class ManagePage(webapp2.RequestHandler):
             template_values = {
                 'my_grouped_list': my_grouped_list,
                 'sub_grouped_list': sub_grouped_list,
-                # 'myStreamList': myStreamList,
-                # 'subscribeStreamList': subscribeStreamList,
-                # 'numViewsList_my': numViewsList_my,
-                # 'numViewsList_sub': numViewsList_sub,
             }
             template = JINJA_ENVIRONMENT.get_template('Manage.html')
             self.response.write(template.render(template_values))
+
+
+class DeleteStream(webapp2.RequestHandler):
     def post(self):
         user = users.get_current_user()
         if user:
             myStreamList = Stream.query(Stream.ownerEmail == user.nickname()).fetch()
-
-            subscribeStreamList = []
-            lst = Subscriber.query(Subscriber.email == user.nickname()).fetch()
-            if lst:
-                for elem in lst:
-                    subscribeStreamList.append(elem.stream)
-
-
             for myStream in myStreamList:
                 check = self.request.get(myStream.name)
                 if check=='on':
                     myStream.key.delete()
-
-            for subscribeStream in subscribeStreamList:
-                check = self.request.get(subscribeStream.name)
-                if check=='on':
-                    subscribeStream.key.delete()
-
-            viewList = View.query(View.stream == streamKey).fetch()
-            numViews = len(viewList)
-
-            template_values = {
-                'myStreamList': myStreamList,
-                'subscribeStreamList': subscribeStreamList,
-                'numViews': numViews,
-            }
-            template = JINJA_ENVIRONMENT.get_template('Manage.html')
-            self.response.write(template.render(template_values))
+            self.redirect('/manage')
 
 
 class CreatePage(webapp2.RequestHandler):
@@ -185,10 +156,49 @@ class ViewAllPage(webapp2.RequestHandler):
 
 class ViewSinglePage(webapp2.RequestHandler):
     def get(self):
+        user = users.get_current_user()
         streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
         # print "streamKey:"
         # print streamKey
         # print
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
+
+        ownerCheck = 'notOwner'
+        if streamKey.get().ownerEmail == user.nickname():
+            ownerCheck = 'isOwner'
+
+
+
+        template_values = {
+            'imgList':imgList,
+            'streamKey': streamKey,
+            'ownerCheck': ownerCheck,
+        }
+        template = JINJA_ENVIRONMENT.get_template('View_single.html')
+        self.response.write(template.render(template_values))
+
+        view = View()
+        view.stream = streamKey
+        view.put()
+class Subscribe(webapp2.RequestHandler):
+    def post(self):
+        user = users.get_current_user()
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+        subscribersList = Subscriber.query(Subscriber.stream == streamKey).fetch()
+
+        # avoid repeated subscribe
+        isRepeat = False
+        for subscriber in subscribersList:
+            if subscriber.email == user.nickname():
+                isRepeat = True
+                break
+
+        if not isRepeat:
+            subscriber = Subscriber()
+            subscriber.stream = streamKey
+            subscriber.email = user.nickname()
+            subscriber.put()
+
         imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
 
         template_values = {
@@ -198,9 +208,16 @@ class ViewSinglePage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('View_single.html')
         self.response.write(template.render(template_values))
 
-        view = View()
-        view.stream = streamKey
-        view.put()
+class Unsubscribe(webapp2.RequestHandler):
+    def post(self):
+        user = users.get_current_user()
+        if user:
+            lst = Subscriber().query(Subscriber.email == user.nickname()).fetch()
+            for subscriber in lst:
+                stream_name = self.request.get(subscriber.stream.get().name)
+                if stream_name and stream_name=='on':
+                    subscriber.key.delete()
+            self.redirect('/manage')
 
 class AddImage(webapp2.RequestHandler):
     def post(self):
@@ -218,10 +235,6 @@ class AddImage(webapp2.RequestHandler):
         }
         template = JINJA_ENVIRONMENT.get_template('View_single.html')
         self.response.write(template.render(template_values))
-
-
-
-
 
 class ErrorPage(webapp2.RequestHandler):
     def get(self):
@@ -243,6 +256,9 @@ app = webapp2.WSGIApplication([
     ('/create', CreatePage),
     ('/View_all', ViewAllPage),
     ('/View_single', ViewSinglePage),
+    ('/subscribe', Subscribe),
+    ('/unsubscribe', Unsubscribe),
+    ('/deleteStream', DeleteStream),
     ('/Add_Image', AddImage),
     ('/error', ErrorPage)
 ], debug=True)

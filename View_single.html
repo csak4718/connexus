@@ -24,10 +24,16 @@
 {% endif %}
 </div>
 <div class="row">
+  {% if ownerCheck|string() == 'isOwner' %}
   <form action="/Add_Image?streamKey={{streamKey.urlsafe()}}" enctype="multipart/form-data" method="post">
     <div><input type="file" name="img"/></div>
     <input class="btn btn-default" type="submit" value="Add Image">
   </form>
+  {% else %}
+  <form action="/subscribe?streamKey={{streamKey.urlsafe()}}" enctype="multipart/form-data" method="post">
+    <input class="btn btn-default" type="submit" value="Subscribe">
+  </form>
+  {% endif %}
 </div>
 
 </div>
