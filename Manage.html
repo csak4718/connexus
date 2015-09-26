@@ -10,7 +10,11 @@
             {% if myStreamList %}
                 <form action="/manage" method="post">
                 {% for myStream in myStreamList %}
-                    <p> {{ myStream.name }}
+                    <p>
+                        <a href="/View_single?stream_name={{myStream.name|safe}}">
+                        {{ myStream.name }}
+                        </a>
+                        {{ numViews }}
                         <input name="{{myStream.name}}" type="checkbox">
                     </p>
                 {% endfor %}
@@ -37,6 +41,9 @@
                 </form>
             {% else %}
                 You do not have any subscriptions yet. Subscribe to some today!
+                <button type="submit" onclick="location.href = '/View_all'">
+                    View all streams
+                </button>
             {% endif %}
         </div>
     </div>

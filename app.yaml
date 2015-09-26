@@ -11,7 +11,9 @@ handlers:
 
 - url: /css
   static_dir: css
-
+- url: /assets
+  static_dir: assets
+  
 - url: /.*
   script: connexus.app
 

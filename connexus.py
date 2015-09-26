@@ -64,17 +64,17 @@ class ManagePage(webapp2.RequestHandler):
         user = users.get_current_user()
         if user:
             myStreamList = Stream.query(Stream.owner.email == user.nickname()).fetch()
-            print "myStreamList:"
-            print myStreamList
-            print
+            # print "myStreamList:"
+            # print myStreamList
+            # print
 
             subscribeStreamList = []
             lst = Subscriber.query(Subscriber.email == user.nickname()).fetch()
             if lst:
                 for elem in lst:
                     subscribeStreamList.append(elem.stream)
-                print "subscribeStreamList:"
-                print subscribeStreamList
+                # print "subscribeStreamList:"
+                # print subscribeStreamList
 
             template_values = {
                 'myStreamList': myStreamList,
@@ -123,6 +123,12 @@ class CreatePage(webapp2.RequestHandler):
         user = users.get_current_user()
         if user:
             name = self.request.get('name')
+            streamList = Stream.query(Stream.name==name).fetch()
+            if len(streamList) != 0:
+                # TODO
+                # repeated stream name
+                pass
+
             inviteMsg = self.request.get('msg')
             coverUrl = self.request.get('cover_url')
             tagsString = self.request.get('tags')
@@ -155,16 +161,39 @@ class CreatePage(webapp2.RequestHandler):
 
             self.redirect('/manage')
 
-class View_all(webapp2.RequestHandler):
+class ViewAllPage(webapp2.RequestHandler):
     def get(self):
         stream_list=Stream.query().order(-Stream.time)
         template_values = {'Streams': stream_list}
         template = JINJA_ENVIRONMENT.get_template('View_all.html')
         self.response.write(template.render(template_values))
 
+class ViewSinglePage(webapp2.RequestHandler):
+    def get(self):
+        stream_name = self.request.get('stream_name')
+        print "stream_name:"
+        print stream_name
+        print
+        imgList = Image.query(Image.stream.name == stream_name).order(-Image.time).fetch()
+
+        template_values = {
+            'imgList':imgList,
+        }
+
+        template = JINJA_ENVIRONMENT.get_template('View_single.html')
+        self.response.write(template.render(template_values))
+
+        streamList = Stream.query(Stream.name == stream_name).fetch()
+        print "streamList:"
+        print streamList
+        print
+        view = View()
+        view.stream = streamList[0]
+
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
     ('/manage', ManagePage),
     ('/create', CreatePage),
-    ('/View_all', View_all),
+    ('/View_all', ViewAllPage),
+    ('/View_single', ViewSinglePage),
 ], debug=True)
