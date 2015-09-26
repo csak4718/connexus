@@ -91,10 +91,10 @@ class ManagePage(webapp2.RequestHandler):
             template_values = {
                 'my_grouped_list': my_grouped_list,
                 'sub_grouped_list': sub_grouped_list,
-                'myStreamList': myStreamList,
-                'subscribeStreamList': subscribeStreamList,
-                'numViewsList_my': numViewsList_my,
-                'numViewsList_sub': numViewsList_sub,
+                # 'myStreamList': myStreamList,
+                # 'subscribeStreamList': subscribeStreamList,
+                # 'numViewsList_my': numViewsList_my,
+                # 'numViewsList_sub': numViewsList_sub,
             }
             template = JINJA_ENVIRONMENT.get_template('Manage.html')
             self.response.write(template.render(template_values))
@@ -186,9 +186,9 @@ class ViewAllPage(webapp2.RequestHandler):
 class ViewSinglePage(webapp2.RequestHandler):
     def get(self):
         streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-        print "streamKey:"
-        print streamKey
-        print
+        # print "streamKey:"
+        # print streamKey
+        # print
         imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
 
         template_values = {

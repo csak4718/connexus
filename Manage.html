@@ -7,7 +7,7 @@
 <div class="panel panel-default">
     <div class="panel-heading">Streams I Own</div>
         <div class="panel-body">
-            {% if myStreamList %}
+            {% if my_grouped_list %}
                 <form action="/manage" method="post">
                 {% for myStream, numViews in my_grouped_list %}
                     <p>
@@ -30,7 +30,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">Streams I Subscribe to</div>
         <div class="panel-body">
-            {% if subscribeStreamList %}
+            {% if sub_grouped_list %}
                 <form action="/manage" method="post">
                 {% for subscribeStream, numViews in sub_grouped_list %}
                     <p>
