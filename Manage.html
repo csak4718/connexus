@@ -8,7 +8,7 @@
     <div class="panel-heading">Streams I Own</div>
         <div class="panel-body">
             {% if my_grouped_list %}
-                <form action="/manage" method="post">
+                <form action="/deleteStream" method="post">
                 {% for myStream, numViews in my_grouped_list %}
                     <p>
                         <a href="/View_single?streamKey={{myStream.key.urlsafe()}}">
@@ -31,14 +31,14 @@
         <div class="panel-heading">Streams I Subscribe to</div>
         <div class="panel-body">
             {% if sub_grouped_list %}
-                <form action="/manage" method="post">
+                <form action="/unsubscribe" method="post">
                 {% for subscribeStream, numViews in sub_grouped_list %}
                     <p>
-                        <a href="/View_single?streamKey={{subscribeStream.key.urlsafe()}}">
-                        {{ subscribeStream.name }}
+                        <a href="/View_single?streamKey={{subscribeStream.urlsafe()}}">
+                        {{ subscribeStream.get().name }}
                         </a>
                         {{ numViews }}
-                        <input name="{{subscribeStream.name}}" type="checkbox">
+                        <input name="{{subscribeStream.get().name}}" type="checkbox">
                     </p>
                 {% endfor %}
                 <input type="submit" value="Unsubscribe selected streams">
