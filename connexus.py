@@ -12,10 +12,10 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-class Owner(ndb.Model):
-    email = ndb.StringProperty()
+# class Owner(ndb.Model):
+#     email = ndb.StringProperty()
 class Stream(ndb.Model):
-    owner = ndb.StructuredProperty(Owner)
+    ownerEmail = ndb.StringProperty()
     name = ndb.StringProperty()
     inviteMsg = ndb.StringProperty(indexed = False)
     coverUrl = ndb.StringProperty(indexed=False)
@@ -23,16 +23,16 @@ class Stream(ndb.Model):
 class Image(ndb.Model):
     name = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
-    stream = ndb.StructuredProperty(Stream)
+    stream = ndb.KeyProperty(kind='Stream')
 class Subscriber(ndb.Model):
-    stream = ndb.StructuredProperty(Stream)
+    stream = ndb.KeyProperty(kind='Stream')
     email = ndb.StringProperty()
 class View(ndb.Model):
-    stream = ndb.StructuredProperty(Stream)
+    stream = ndb.KeyProperty(kind='Stream')
     time = ndb.DateTimeProperty(auto_now_add=True)
 class Tag(ndb.Model):
     name = ndb.StringProperty()
-    stream = ndb.StructuredProperty(Stream)
+    stream = ndb.KeyProperty(kind='Stream')
 
 
 class LandingPage(webapp2.RequestHandler):
@@ -63,7 +63,7 @@ class ManagePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
         if user:
-            myStreamList = Stream.query(Stream.owner.email == user.nickname()).fetch()
+            myStreamList = Stream.query(Stream.ownerEmail == user.nickname()).fetch()
             # print "myStreamList:"
             # print myStreamList
             # print
@@ -85,7 +85,7 @@ class ManagePage(webapp2.RequestHandler):
     def post(self):
         user = users.get_current_user()
         if user:
-            myStreamList = Stream.query(Stream.owner.email == user.nickname()).fetch()
+            myStreamList = Stream.query(Stream.ownerEmail == user.nickname()).fetch()
 
             subscribeStreamList = []
             lst = Subscriber.query(Subscriber.email == user.nickname()).fetch()
@@ -132,12 +132,10 @@ class CreatePage(webapp2.RequestHandler):
                 tagsString = self.request.get('tags')
                 subscribersString = self.request.get('subscribers')
 
-                owner = Owner()
-                owner.email = user.nickname()
-                owner.put()
+                ownerEmail = user.nickname()
 
                 stream = Stream()
-                stream.owner = owner
+                stream.ownerEmail = ownerEmail
                 stream.name = name
                 stream.inviteMsg = inviteMsg
                 stream.coverUrl = coverUrl
@@ -147,14 +145,14 @@ class CreatePage(webapp2.RequestHandler):
                 for item in tagsList:
                     tag = Tag()
                     tag.name = item
-                    tag.stream = stream
+                    tag.stream = stream.key
                     tag.put()
 
                 subscribersList = subscribersString.split(', ')
                 for item in subscribersList:
                     subscriber = Subscriber()
                     subscriber.email = item
-                    subscriber.stream = stream
+                    subscriber.stream = stream.key
                     subscriber.put()
 
                 self.redirect('/manage')
@@ -168,25 +166,21 @@ class ViewAllPage(webapp2.RequestHandler):
 
 class ViewSinglePage(webapp2.RequestHandler):
     def get(self):
-        stream_name = self.request.get('stream_name')
-        print "stream_name:"
-        print stream_name
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+        print "streamKey:"
+        print streamKey
         print
-        imgList = Image.query(Image.stream.name == stream_name).order(-Image.time).fetch()
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
 
         template_values = {
             'imgList':imgList,
         }
-
         template = JINJA_ENVIRONMENT.get_template('View_single.html')
         self.response.write(template.render(template_values))
 
-        streamList = Stream.query(Stream.name == stream_name).fetch()
-        print "streamList:"
-        print streamList
-        print
+
         view = View()
-        view.stream = streamList[0]
+        view.stream = streamKey
 
 class ErrorPage(webapp2.RequestHandler):
     def get(self):

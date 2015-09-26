@@ -11,7 +11,7 @@
                 <form action="/manage" method="post">
                 {% for myStream in myStreamList %}
                     <p>
-                        <a href="/View_single?stream_name={{myStream.name|safe}}">
+                        <a href="/View_single?streamKey={{myStream.key.urlsafe()}}">
                         {{ myStream.name }}
                         </a>
                         {{ numViews }}

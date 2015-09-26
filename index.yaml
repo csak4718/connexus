@@ -12,6 +12,12 @@ indexes:
 
 - kind: Image
   properties:
+  - name: stream
+  - name: time
+    direction: desc
+
+- kind: Image
+  properties:
   - name: stream.name
   - name: time
     direction: desc
