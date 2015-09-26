@@ -7,7 +7,7 @@
   {% for img in imgList %}
   <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
-      <img src="assets/Water.png" alt="image">
+      <img src="/img?img_id={{img.key.urlsafe()}}" alt="image">
       <div class="caption">
         <h3>Image</h3>
         <p>Created at {{img.time}}</p>

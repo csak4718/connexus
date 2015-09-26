@@ -13,9 +13,12 @@ handlers:
   static_dir: css
 - url: /assets
   static_dir: assets
-  
+
 - url: /.*
   script: connexus.app
+
+- url: /.*
+  script: trending.app
 
 libraries:
 - name: webapp2

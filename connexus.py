@@ -154,6 +154,46 @@ class ViewAllPage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('View_all.html')
         self.response.write(template.render(template_values))
 
+class Search(webapp2.RequestHandler):
+    def get(self):
+        template = JINJA_ENVIRONMENT.get_template('Search.html')
+        self.response.write(template.render())
+
+    def post(self):
+        streamset=set()
+        searchtarget = self.request.get('target')
+        name_result = Stream.query(searchtarget == Stream.name)
+        tag_result =  Tag.query(searchtarget == Tag.name)
+
+        result_list = name_result.fetch()
+
+        for names in name_result:
+            streamKey = names.key
+            if streamKey not in streamset:
+                streamset.add(streamKey)
+            else:
+                pass
+
+        for tags in tag_result:
+            key_of_stream = tags.stream
+            if key_of_stream in streamset:
+                pass
+            else:
+                streamset.add(key_of_stream)
+                result_list.append(key_of_stream.get())
+
+        if len(result_list)==0:
+            template_values={'Results':result_list, 'Test': [0,0,0,0]}
+            template = JINJA_ENVIRONMENT.get_template('Search.html')
+            self.response.write(template.render(template_values))
+        else:
+            template_values={'Results':result_list, 'Test': [1,1,1,1]}
+            template = JINJA_ENVIRONMENT.get_template('Search.html')
+            self.response.write(template.render(template_values))
+
+
+
+
 class ViewSinglePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
@@ -250,6 +290,15 @@ class ErrorPage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('Error_Page.html')
         self.response.write(template.render(template_values))
 
+class ImageHandler(webapp2.RequestHandler):
+    def get(self):
+        ImageKey = ndb.Key(urlsafe=self.request.get('img_id'))
+        img = ImageKey.get()
+        self.response.headers['Content-Type'] = 'image/png'
+        self.response.out.write(img.full_size_image)
+
+
+
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
     ('/manage', ManagePage),
@@ -260,5 +309,7 @@ app = webapp2.WSGIApplication([
     ('/unsubscribe', Unsubscribe),
     ('/deleteStream', DeleteStream),
     ('/Add_Image', AddImage),
+    ('/img', ImageHandler),
+    ('/search', Search),
     ('/error', ErrorPage)
 ], debug=True)
