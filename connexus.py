@@ -5,6 +5,7 @@ import urllib
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from google.appengine.api import images
+from google.appengine.api import mail
 
 import jinja2
 import webapp2
@@ -69,22 +70,49 @@ class ManagePage(webapp2.RequestHandler):
         if user:
             myStreamList = Stream().query(Stream.ownerEmail == user.nickname())#.fetch()
             numViewsList_my = []
+            lastupdatetime_my = []
+            numberofpicture_my = []
+
             for elem in myStreamList:
                 viewCount = View.query(View.stream == elem.key).count(limit=None)
+                Piccount = Image.query(Image.stream == elem.key).count(limit=None)
+
+                query_image = Image.query(Image.stream == elem.key).order(-Image.time).fetch()
+                if len(query_image) == 0:
+                    updatetime = elem.time.strftime('%I:%M%p on %b %d, %Y')
+                else:
+                    updatetime = query_image[0].time.strftime('%I:%M%p on %b %d, %Y')
+
                 numViewsList_my.append(viewCount)
+                lastupdatetime_my.append(updatetime)
+                numberofpicture_my.append(Piccount)
 
             subscribeStreamList = []
             numViewsList_sub = []
+            lastupdatetime_sub = []
+            numberofpicture_sub = []
+
             lst = Subscriber().query(Subscriber.email == user.nickname())#.fetch()
             if lst:
                 for elem in lst:
                     subscribeStreamList.append(elem.stream)
                     viewCount = View.query(View.stream == elem.stream).count(limit=None)
+                    Piccount = Image.query(Image.stream == elem.key).count(limit=None)
+
+                    Piccount = Image.query(Image.stream == elem.key).count(limit=None)
+
+                    query_image = Image.query(Image.stream == elem.key).order(-Image.time).fetch()
+                    if len(query_image) == 0:
+                        updatetime = elem.time.strftime('%I:%M%p on %b %d, %Y')
+                    else:
+                        updatetime = query_image[0].time.strftime('%I:%M%p on %b %d, %Y')
+
                     numViewsList_sub.append(viewCount)
+                    lastupdatetime_sub.append(updatetime)
+                    numberofpicture_sub.append(Piccount)
 
-
-            my_grouped_list = zip(myStreamList, numViewsList_my)
-            sub_grouped_list = zip(subscribeStreamList, numViewsList_sub)
+            my_grouped_list = zip(myStreamList, numViewsList_my, lastupdatetime_my, numberofpicture_my)
+            sub_grouped_list = zip(subscribeStreamList, numViewsList_sub, lastupdatetime_sub, numberofpicture_sub)
 
             template_values = {
                 'my_grouped_list': my_grouped_list,
@@ -147,6 +175,14 @@ class CreatePage(webapp2.RequestHandler):
                     subscriber.email = item
                     subscriber.stream = stream.key
                     subscriber.put()
+                    mail.send_mail(sender= user.email(),
+                                    to=item,
+                                    subject="Testing Email",
+                                    body="""
+                                    Please oh please work
+                                    """)
+
+
 
                 self.redirect('/manage')
 

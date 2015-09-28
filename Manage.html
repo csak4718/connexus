@@ -9,12 +9,14 @@
         <div class="panel-body">
             {% if my_grouped_list %}
                 <form action="/deleteStream" method="post">
-                {% for myStream, numViews in my_grouped_list %}
+                {% for myStream, numViews, upadatetime, numPics in my_grouped_list %}
                     <p>
                         <a href="/View_single?streamKey={{myStream.key.urlsafe()}}">
                         {{ myStream.name }}
                         </a>
                         {{ numViews }}
+                        {{ upadatetime }}
+                        {{ numPics }}
                         <input name="{{myStream.name}}" type="checkbox">
                     </p>
                 {% endfor %}
@@ -32,12 +34,14 @@
         <div class="panel-body">
             {% if sub_grouped_list %}
                 <form action="/unsubscribe" method="post">
-                {% for subscribeStream, numViews in sub_grouped_list %}
+                {% for subscribeStream, numViews, upadatetime, numPics in sub_grouped_list %}
                     <p>
                         <a href="/View_single?streamKey={{subscribeStream.urlsafe()}}">
                         {{ subscribeStream.get().name }}
                         </a>
                         {{ numViews }}
+                        {{ upadatetime }}
+                        {{ numPics }}
                         <input name="{{subscribeStream.get().name}}" type="checkbox">
                     </p>
                 {% endfor %}
