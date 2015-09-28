@@ -1,6 +1,7 @@
 import os
 import urllib
 
+
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from google.appengine.api import images
@@ -13,6 +14,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
+from trending import *
 # class Owner(ndb.Model):
 #     email = ndb.StringProperty()
 class Stream(ndb.Model):
@@ -79,6 +81,7 @@ class ManagePage(webapp2.RequestHandler):
                     subscribeStreamList.append(elem.stream)
                     viewCount = View.query(View.stream == elem.stream).count(limit=None)
                     numViewsList_sub.append(viewCount)
+
 
             my_grouped_list = zip(myStreamList, numViewsList_my)
             sub_grouped_list = zip(subscribeStreamList, numViewsList_sub)
@@ -297,6 +300,20 @@ class ImageHandler(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'image/png'
         self.response.out.write(img.full_size_image)
 
+class Trending(webapp2.RequestHandler):
+    def get(self):
+        Popular_stream_list = PopularStreams.query().order(-PopularStreams.numberofviews).fetch()
+        stream_list = list()
+        view_list = list()
+        for item in Popular_stream_list:
+            stream_list.append(item.streams)
+            view_list.append(item.numberofviews)
+
+        FinalResult = zip(stream_list, view_list)
+
+        template_values = {'Streams': FinalResult}
+        template = JINJA_ENVIRONMENT.get_template('Trending.html')
+        self.response.write(template.render(template_values))
 
 
 app = webapp2.WSGIApplication([
@@ -311,5 +328,7 @@ app = webapp2.WSGIApplication([
     ('/Add_Image', AddImage),
     ('/img', ImageHandler),
     ('/search', Search),
+    ('/crontask', CronTask),
+    ('/trending', Trending),
     ('/error', ErrorPage)
 ], debug=True)

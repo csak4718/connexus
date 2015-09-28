@@ -1,5 +1,5 @@
 cron:
 - description: update trends
-  url: /.*
+  url: /crontask
   schedule: every 1 minutes
   #schedule: every 5 minutes
