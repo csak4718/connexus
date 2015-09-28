@@ -97,11 +97,9 @@ class ManagePage(webapp2.RequestHandler):
                 for elem in lst:
                     subscribeStreamList.append(elem.stream)
                     viewCount = View.query(View.stream == elem.stream).count(limit=None)
-                    Piccount = Image.query(Image.stream == elem.key).count(limit=None)
+                    Piccount = Image.query(Image.stream == elem.stream).count(limit=None)
 
-                    Piccount = Image.query(Image.stream == elem.key).count(limit=None)
-
-                    query_image = Image.query(Image.stream == elem.key).order(-Image.time).fetch()
+                    query_image = Image.query(Image.stream == elem.stream).order(-Image.time).fetch()
                     if len(query_image) == 0:
                         updatetime = elem.time.strftime('%I:%M%p on %b %d, %Y')
                     else:
