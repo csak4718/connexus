@@ -176,7 +176,7 @@ class CreatePage(webapp2.RequestHandler):
                     subscriber.email = item
                     subscriber.stream = stream.key
                     subscriber.put()
-                    if len(item) > 5:
+                    if len(item) > 1:
                         mail.send_mail(sender = user.email(),
                                         to = item,
                                         subject = "Testing Email",
@@ -368,6 +368,9 @@ app = webapp2.WSGIApplication([
     ('/img', ImageHandler),
     ('/search', Search),
     ('/crontask', CronTask),
+    ('/update5',Update5),
+    ('/updatehour',UpdateHour),
+    ('/updateday', UpdateDay),
     ('/trending', Trending),
     ('/error', ErrorPage)
 ], debug=True)

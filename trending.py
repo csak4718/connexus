@@ -9,6 +9,7 @@ import collections
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from google.appengine.api import images
+from google.appengine.api import mail
 
 import jinja2
 import webapp2
@@ -30,6 +31,9 @@ class PopularStreams(ndb.Model):
 class View(ndb.Model):
     stream = ndb.KeyProperty(kind=Stream)
     time = ndb.DateTimeProperty(auto_now_add=True)
+class EmailUpdateList(ndb.Model):
+    mail = ndb.StringProperty()
+    duration = ndb.IntegerProperty()
 
 
 class CronTask(webapp2.RequestHandler):
@@ -62,6 +66,35 @@ class CronTask(webapp2.RequestHandler):
             FinalResult.numberofviews = streams[1]
             FinalResult.put()
 
+class Update5(webapp2.RequestHandler):
+    def get(self):
+        mail_list = EmailUpdateList.query( EmailUpdateList.duration == 5 )
+        for user in mail_list:
+            if len(user.mail) > 1:
+                mail.send_mail(sender = "Connexus :: Info info@<connexus-1079>.appspotmail.com",
+                                to = user.mail,
+                                subject = "Update Trending",
+                                body = """ The New Trending is now Live! """)
+
+class UpdateHour(webapp2.RequestHandler):
+    def get(self):
+        mail_list = EmailUpdateList.query( EmailUpdateList.duration == 60 )
+        for user in mail_list:
+            if len(user.mail) > 1:
+                mail.send_mail(sender = "Connexus :: Info info@<connexus-1079.appspotmail.com>",
+                                to = user.mail,
+                                subject = "Update Trending",
+                                body = """ The New Trending is now Live! """)
+
+class UpdateDay(webapp2.RequestHandler):
+    def get(self):
+        mail_list = EmailUpdateList.query( EmailUpdateList.duration == 1440 )
+        for user in mail_list:
+            if len(user.mail) > 1:
+                mail.send_mail(sender = "Connexus :: Info <info@connexus-1079.appspotmail.com>",
+                                to = user.mail,
+                                subject = "Update Trending",
+                                body = """ The New Trending is now Live! """)
 
 """
         for streams in TrendingStreams_Temp:
