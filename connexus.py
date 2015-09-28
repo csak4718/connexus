@@ -175,12 +175,11 @@ class CreatePage(webapp2.RequestHandler):
                     subscriber.email = item
                     subscriber.stream = stream.key
                     subscriber.put()
-                    mail.send_mail(sender= user.email(),
-                                    to=item,
-                                    subject="Testing Email",
-                                    body="""
-                                    Please oh please work
-                                    """)
+                    mail.send_mail(sender = user.email(),
+                                    to = item,
+                                    subject = "Testing Email",
+                                    body = """You are invited to a New Stream!!! The following is the message from the Creator:
+                                    %s """ % inviteMsg)
 
 
 

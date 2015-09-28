@@ -41,7 +41,7 @@ class CronTask(webapp2.RequestHandler):
 
         hour_ago = datetime.datetime.today() - datetime.timedelta(hours=1)
 
-        ViewsWeCare = View.query().fetch()
+        ViewsWeCare = View.query(View.time >= hour_ago).fetch()
 
         list_of_views=list()
         TrendingStreams=list()
