@@ -129,6 +129,9 @@ class DeleteStream(webapp2.RequestHandler):
                 check = self.request.get(myStream.name)
                 if check=='on':
                     myStream.key.delete()
+                    View_list = View.query(View.stream == myStream.key)
+                    for viewstobeDelete in View_list:
+                        viewstobeDelete.key.delete()
             self.redirect('/manage')
 
 
@@ -173,11 +176,14 @@ class CreatePage(webapp2.RequestHandler):
                     subscriber.email = item
                     subscriber.stream = stream.key
                     subscriber.put()
-                    mail.send_mail(sender = user.email(),
-                                    to = item,
-                                    subject = "Testing Email",
-                                    body = """You are invited to a New Stream!!! The following is the message from the Creator:
-                                    %s """ % inviteMsg)
+                    if len(item) > 5:
+                        mail.send_mail(sender = user.email(),
+                                        to = item,
+                                        subject = "Testing Email",
+                                        body = """You are invited to a New Stream!!! The following is the message from the Creator:
+                                        %s """ % inviteMsg)
+                    else:
+                        pass
 
 
 
