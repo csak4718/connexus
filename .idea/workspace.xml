@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="197d29a6-54d5-4aa0-85a3-267cf650c385" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Manage.html" afterPath="$PROJECT_DIR$/Manage.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Search.html" afterPath="$PROJECT_DIR$/Search.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/View_all.html" afterPath="$PROJECT_DIR$/View_all.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/View_single.html" afterPath="$PROJECT_DIR$/View_single.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/connexus.py" afterPath="$PROJECT_DIR$/connexus.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cron.yaml" afterPath="$PROJECT_DIR$/cron.yaml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="connexus.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -28,14 +22,14 @@
     <favorites_list name="connexus" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5106622">
+    <splitter split-orientation="horizontal" split-proportion="0.53872055">
       <split-first>
         <leaf>
           <file leaf-file-name="connexus.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/connexus.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.7948718">
-                  <caret line="282" column="18" selection-start-line="282" selection-start-column="18" selection-end-line="282" selection-end-column="18" />
+                <state vertical-scroll-proportion="0.64102566">
+                  <caret line="286" column="8" selection-start-line="286" selection-start-column="8" selection-end-line="286" selection-end-column="8" />
                   <folding>
                     <element signature="e#0#9#0" expanded="true" />
                   </folding>
@@ -90,8 +84,8 @@
           <file leaf-file-name="View_single.html" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/View_single.html">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.15456675">
-                  <caret line="6" column="21" selection-start-line="6" selection-start-column="21" selection-end-line="6" selection-end-column="21" />
+                <state vertical-scroll-proportion="0.7728337">
+                  <caret line="30" column="12" selection-start-line="30" selection-start-column="12" selection-end-line="30" selection-end-column="12" />
                   <folding />
                 </state>
               </provider>
@@ -134,10 +128,10 @@
         <option value="$PROJECT_DIR$/View_all.html" />
         <option value="$PROJECT_DIR$/Search.html" />
         <option value="$PROJECT_DIR$/base.html" />
-        <option value="$PROJECT_DIR$/connexus.py" />
         <option value="$PROJECT_DIR$/View_single.html" />
         <option value="$PROJECT_DIR$/Manage.html" />
         <option value="$PROJECT_DIR$/cron.yaml" />
+        <option value="$PROJECT_DIR$/connexus.py" />
       </list>
     </option>
   </component>
@@ -455,14 +449,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/View_single.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.15456675">
-          <caret line="6" column="21" selection-start-line="6" selection-start-column="21" selection-end-line="6" selection-end-column="21" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/trending.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -471,10 +457,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/View_single.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.7728337">
+          <caret line="30" column="12" selection-start-line="30" selection-start-column="12" selection-end-line="30" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/connexus.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.7948718">
-          <caret line="282" column="18" selection-start-line="282" selection-start-column="18" selection-end-line="282" selection-end-column="18" />
+        <state vertical-scroll-proportion="0.64102566">
+          <caret line="286" column="8" selection-start-line="286" selection-start-column="8" selection-end-line="286" selection-end-column="8" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>

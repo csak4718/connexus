@@ -281,6 +281,12 @@ class ViewSinglePage(webapp2.RequestHandler):
         view = View()
         view.stream = streamKey
         view.put()
+
+class MorePictures(webapp2.RequestHandler):
+    #TODO
+    pass
+
+
 class Subscribe(webapp2.RequestHandler):
     def post(self):
         user = users.get_current_user()
