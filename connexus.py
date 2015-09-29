@@ -298,6 +298,9 @@ class ViewSinglePage(webapp2.RequestHandler):
 
         imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
 
+        
+
+
         ownerCheck = 'notOwner'
         if streamKey.get().ownerEmail == user.email():
             ownerCheck = 'isOwner'
