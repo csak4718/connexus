@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Trending{% endblock %}
 {% block content %}
+<p>Email trending report</p>
+<form action="/trending" method="post">
+  <input type="radio" name="trendRate" value="No report"> No report<br></input>
+  <input type="radio" name="trendRate" value="Every 5 minutes"> Every 5 minutes<br></input>
+  <input type="radio" name="trendRate" value="Every 1 hour"> Every 1 hour<br></input>
+  <input type="radio" name="trendRate" value="Every day"> Every day<br></input>
+  <input type="submit" value="Update rate">
+</form>
+{% if updateRateMessage|string() == 'Unavailable' %}
+{% else %}
+    <strong>{{ updateRateMessage }}</strong>
+{% endif %}
 
 <div class="row">
   {% for stream, numberofview in Streams %}
@@ -17,18 +29,7 @@
     </div>
   </div>
   {% endfor %}
-
-  <p>Email trending report</p>
-  <form action="/trending" method="post">
-    <input type="radio" name="trendRate" value="No report"> No report<br></input>
-    <input type="radio" name="trendRate" value="Every 5 minutes"> Every 5 minutes<br></input>
-    <input type="radio" name="trendRate" value="Every 1 hour"> Every 1 hour<br></input>
-    <input type="radio" name="trendRate" value="Every day"> Every day<br></input>
-    <input type="submit" value="Update rate">
-  </form>
-  {% if updateRateMessage|string() == 'Unavailable' %}
-  {% else %}
-      <strong>{{ updateRateMessage }}</strong>
-  {% endif %}
 </div>
+
+<div class="fb-share-button" data-href="http://connexus-fall15.appspot.com/trending" data-width="200" data-type="button"></div>
 {% endblock %}

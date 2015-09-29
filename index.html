@@ -10,6 +10,24 @@
     <title>Connexus</title>
   </head>
   <body>
+  <script>
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId      : '1635624240046414',
+          xfbml      : true,
+          version    : 'v2.4'
+        });
+      };
+
+      (function(d, s, id){
+         var js, fjs = d.getElementsByTagName(s)[0];
+         if (d.getElementById(id)) {return;}
+         js = d.createElement(s); js.id = id;
+         js.src = "//connect.facebook.net/en_US/sdk.js";
+         fjs.parentNode.insertBefore(js, fjs);
+       }(document, 'script', 'facebook-jssdk'));
+  </script>
+
   {% if user %}
   <nav class="navbar navbar-default navbar-fixed-top">
       <div class="container">
@@ -36,7 +54,6 @@
                 <div class="panel-body">
                 <div><h1 id="mast_header"> Hi {{ user.email() }} <br>
                                                   Welcome to Connexus! </strong> </h1></div>
-                    <p class="text" id="login_msg">Connexus uses Google Accounts:</p>
                 </div>
                 <div>
                       <button type="submit" onclick="location.href = '{{log_url}}'">
@@ -46,7 +63,6 @@
               {% else %}
                 <div class="panel-body">
                 <div><h1 id="mast_header"> <strong> Welcome to Connexus! </strong> </h1></div>
-                    <p class="text" id="login_msg">Connexus uses Google Accounts:</p>
                 </div>
                 <div>
                       <button type="submit" onclick="location.href = '{{log_url}}'">
@@ -54,6 +70,8 @@
                       </button>
                 </div>
               {% endif %}
+              <br>
+              <div class="fb-share-button" data-href="http://connexus-fall15.appspot.com/" data-width="200" data-type="button"></div>
           </div>
       </div>
   </div>
