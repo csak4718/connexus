@@ -14,6 +14,9 @@
     </div>
   </div>
   {% endfor %}
+  <form action="/View_single?streamKey={{streamKey.urlsafe()}}" method="post">
+    <button id="search_btn" type="submit" class="btn btn-primary" value="{{skiptimes}}" name="skiptimes">MorePictrues</button>
+  </form>
 {% else %}
   <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
