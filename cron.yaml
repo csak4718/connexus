@@ -1,7 +1,7 @@
 cron:
 - description: update trends
   url: /crontask
-  schedule: every 5 minutes
+  schedule: every 1 minutes
 
 - description: update 5 min
   url: /update5

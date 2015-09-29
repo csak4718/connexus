@@ -24,7 +24,6 @@ class Stream(ndb.Model):
     coverUrl = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
 class Image(ndb.Model):
-    # name = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
     stream = ndb.KeyProperty(kind=Stream)
     full_size_image = ndb.BlobProperty()
@@ -97,8 +96,6 @@ class ManagePage(webapp2.RequestHandler):
                     subscribeStreamList.append(elem.stream)
                     viewCount = View.query(View.stream == elem.stream).count(limit=None)
                     Piccount = Image.query(Image.stream == elem.stream).count(limit=None)
-                    print "elem.stream:"
-                    print elem.stream
                     query_image = Image.query(Image.stream == elem.stream).order(-Image.time).fetch()
                     if len(query_image) == 0:
                         updatetime = elem.stream.get().time.strftime('%I:%M%p on %b %d, %Y')
@@ -149,10 +146,22 @@ class CreatePage(webapp2.RequestHandler):
             if len(streamList) != 0:
                 self.redirect('/error?errorType=0')
             else:
+                #TODO: task 2
                 inviteMsg = self.request.get('msg')
                 coverUrl = self.request.get('cover_url')
                 tagsString = self.request.get('tags')
                 subscribersString = self.request.get('subscribers')
+                print "subscribersString"
+                print subscribersString
+                print "len(subscribersString)"
+                print len(subscribersString)
+                if subscribersString==None:
+                    print "subscribersString == None"
+                elif subscribersString=="":
+                    print "subscribersString is an empty string"
+                else:
+                    print "non"
+
 
                 ownerEmail = user.email()
 
@@ -163,27 +172,33 @@ class CreatePage(webapp2.RequestHandler):
                 stream.coverUrl = coverUrl
                 stream.put()
 
-                tagsList = tagsString.split(', ')
-                for item in tagsList:
-                    tag = Tag()
-                    tag.name = item
-                    tag.stream = stream.key
-                    tag.put()
+                if tagsString != "":
+                    tagsList = tagsString.split(', ')
+                    for item in tagsList:
+                        tag = Tag()
+                        tag.name = item
+                        tag.stream = stream.key
+                        tag.put()
 
-                subscribersList = subscribersString.split(', ')
-                for item in subscribersList:
-                    subscriber = Subscriber()
-                    subscriber.email = item
-                    subscriber.stream = stream.key
-                    subscriber.put()
-                    if len(item) > 1:
-                        mail.send_mail(sender = user.email(),
-                                        to = item,
-                                        subject = "Testing Email",
-                                        body = """You are invited to a New Stream!!! The following is the message from the Creator:
-                                        %s """ % inviteMsg)
-                    else:
-                        pass
+                if subscribersString != "":
+                    subscribersList = subscribersString.split(', ')
+                    for item in subscribersList:
+                        subscriber = Subscriber()
+                        subscriber.email = item
+                        subscriber.stream = stream.key
+                        subscriber.put()
+                        if len(item) > 1:
+                            if inviteMsg != "":
+                                mail.send_mail(sender = user.email(),
+                                                to = item,
+                                                subject = "You are invited to a New Stream!",
+                                                body = "You are invited to stream "+name+ ". The following is the message from the Creator:\n" + inviteMsg)
+                            else:
+                                mail.send_mail(sender = user.email(),
+                                                to = item,
+                                                subject = "You are invited to a New Stream!",
+                                                body = "You are invited to stream "+name+ "." )
+
 
 
 
@@ -192,7 +207,9 @@ class CreatePage(webapp2.RequestHandler):
 class ViewAllPage(webapp2.RequestHandler):
     def get(self):
         stream_list=Stream.query().order(-Stream.time)
-        template_values = {'Streams': stream_list}
+        template_values = {
+            'Streams': stream_list,
+        }
         template = JINJA_ENVIRONMENT.get_template('View_all.html')
         self.response.write(template.render(template_values))
 
@@ -204,8 +221,9 @@ class Search(webapp2.RequestHandler):
     def post(self):
         streamset=set()
         searchtarget = self.request.get('target')
+        # targetTagList = self.request.get('target').split(', ')
         name_result = Stream.query(searchtarget == Stream.name)
-        tag_result =  Tag.query(searchtarget == Tag.name)
+        tag_result = Tag.query(searchtarget == Tag.name)
 
         result_list = name_result.fetch()
 
@@ -225,11 +243,15 @@ class Search(webapp2.RequestHandler):
                 result_list.append(key_of_stream.get())
 
         if len(result_list)==0:
-            template_values={'Results':result_list, 'Test': [0,0,0,0]}
+            template_values={
+                'Results':result_list,
+            }
             template = JINJA_ENVIRONMENT.get_template('Search.html')
             self.response.write(template.render(template_values))
         else:
-            template_values={'Results':result_list, 'Test': [1,1,1,1]}
+            template_values={
+                'Results':result_list,
+            }
             template = JINJA_ENVIRONMENT.get_template('Search.html')
             self.response.write(template.render(template_values))
 
@@ -240,9 +262,6 @@ class ViewSinglePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
         streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-        # print "streamKey:"
-        # print streamKey
-        # print
         imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
 
         ownerCheck = 'notOwner'
@@ -303,26 +322,24 @@ class Unsubscribe(webapp2.RequestHandler):
 
 class AddImage(webapp2.RequestHandler):
     def post(self):
-        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-        img = Image()
-        img.stream = streamKey
-        img.full_size_image= self.request.get('img')
-        img.put()
+        if self.request.get('img') != "":
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            img = Image()
+            img.stream = streamKey
+            img.full_size_image = self.request.get('img')
+            img.put()
+            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+        else:
+            self.redirect('/error?errorType=1')
 
-        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
-
-        template_values = {
-            'imgList':imgList,
-            'streamKey': streamKey,
-        }
-        template = JINJA_ENVIRONMENT.get_template('View_single.html')
-        self.response.write(template.render(template_values))
 
 class ErrorPage(webapp2.RequestHandler):
     def get(self):
         errorType = self.request.get('errorType')
-        if (errorType=='0'):
+        if errorType=='0':
             errorMsg = "Trying to create a new stream which has the same name as an existing stream"
+        elif errorType=='1':
+            errorMsg = "You didn't select an image."
         else:
             errorMsg = "Something went wrong"
 
@@ -377,8 +394,6 @@ class Trending(webapp2.RequestHandler):
                     updateRateMessage = "You will receive trending report every 5 minutes"
                     emailUpdateList = EmailUpdateList()
                     emailUpdateList.mail = user.email()
-                    print "emailUpdateList.mail: "
-                    print emailUpdateList.mail
                     emailUpdateList.duration = 5
                     emailUpdateList.put()
                 elif trendRate == 'Every 1 hour':
