@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Trending{% endblock %}
+{% block content %}
+
+<div class="row">
+  {% for stream, numberofview in Streams %}
+  <div class="col-sm-6 col-md-4">
+    <div class="thumbnail">
+      <a href="/View_single?streamKey={{stream.urlsafe()}}">
+        <img src="{{stream.get().coverUrl}}" alt="{{stream.get().name}}">
+      </a>
+      <div class="caption">
+        <h3>{{stream.get().name}}</h3>
+        <p>Created by {{stream.get().owner}}</p>
+        <p>Number of Views in the past Hour {{numberofview}}</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

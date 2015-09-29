@@ -1,9 +1,11 @@
 import os
 import urllib
 
+
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from google.appengine.api import images
+from google.appengine.api import mail
 
 import jinja2
 import webapp2
@@ -13,6 +15,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
+from trending import *
 # class Owner(ndb.Model):
 #     email = ndb.StringProperty()
 class Stream(ndb.Model):
@@ -67,21 +70,47 @@ class ManagePage(webapp2.RequestHandler):
         if user:
             myStreamList = Stream().query(Stream.ownerEmail == user.nickname())#.fetch()
             numViewsList_my = []
+            lastupdatetime_my = []
+            numberofpicture_my = []
+
             for elem in myStreamList:
                 viewCount = View.query(View.stream == elem.key).count(limit=None)
+                Piccount = Image.query(Image.stream == elem.key).count(limit=None)
+
+                query_image = Image.query(Image.stream == elem.key).order(-Image.time).fetch()
+                if len(query_image) == 0:
+                    updatetime = elem.time.strftime('%I:%M%p on %b %d, %Y')
+                else:
+                    updatetime = query_image[0].time.strftime('%I:%M%p on %b %d, %Y')
+
                 numViewsList_my.append(viewCount)
+                lastupdatetime_my.append(updatetime)
+                numberofpicture_my.append(Piccount)
 
             subscribeStreamList = []
             numViewsList_sub = []
+            lastupdatetime_sub = []
+            numberofpicture_sub = []
+
             lst = Subscriber().query(Subscriber.email == user.nickname())#.fetch()
             if lst:
                 for elem in lst:
                     subscribeStreamList.append(elem.stream)
                     viewCount = View.query(View.stream == elem.stream).count(limit=None)
-                    numViewsList_sub.append(viewCount)
+                    Piccount = Image.query(Image.stream == elem.stream).count(limit=None)
 
-            my_grouped_list = zip(myStreamList, numViewsList_my)
-            sub_grouped_list = zip(subscribeStreamList, numViewsList_sub)
+                    query_image = Image.query(Image.stream == elem.stream).order(-Image.time).fetch()
+                    if len(query_image) == 0:
+                        updatetime = elem.time.strftime('%I:%M%p on %b %d, %Y')
+                    else:
+                        updatetime = query_image[0].time.strftime('%I:%M%p on %b %d, %Y')
+
+                    numViewsList_sub.append(viewCount)
+                    lastupdatetime_sub.append(updatetime)
+                    numberofpicture_sub.append(Piccount)
+
+            my_grouped_list = zip(myStreamList, numViewsList_my, lastupdatetime_my, numberofpicture_my)
+            sub_grouped_list = zip(subscribeStreamList, numViewsList_sub, lastupdatetime_sub, numberofpicture_sub)
 
             template_values = {
                 'my_grouped_list': my_grouped_list,
@@ -100,6 +129,9 @@ class DeleteStream(webapp2.RequestHandler):
                 check = self.request.get(myStream.name)
                 if check=='on':
                     myStream.key.delete()
+                    View_list = View.query(View.stream == myStream.key)
+                    for viewstobeDelete in View_list:
+                        viewstobeDelete.key.delete()
             self.redirect('/manage')
 
 
@@ -144,6 +176,16 @@ class CreatePage(webapp2.RequestHandler):
                     subscriber.email = item
                     subscriber.stream = stream.key
                     subscriber.put()
+                    if len(item) > 1:
+                        mail.send_mail(sender = user.email(),
+                                        to = item,
+                                        subject = "Testing Email",
+                                        body = """You are invited to a New Stream!!! The following is the message from the Creator:
+                                        %s """ % inviteMsg)
+                    else:
+                        pass
+
+
 
                 self.redirect('/manage')
 
@@ -297,6 +339,20 @@ class ImageHandler(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'image/png'
         self.response.out.write(img.full_size_image)
 
+class Trending(webapp2.RequestHandler):
+    def get(self):
+        Popular_stream_list = PopularStreams.query().order(-PopularStreams.numberofviews).fetch()
+        stream_list = list()
+        view_list = list()
+        for item in Popular_stream_list:
+            stream_list.append(item.streams)
+            view_list.append(item.numberofviews)
+
+        FinalResult = zip(stream_list, view_list)
+
+        template_values = {'Streams': FinalResult}
+        template = JINJA_ENVIRONMENT.get_template('Trending.html')
+        self.response.write(template.render(template_values))
 
 
 app = webapp2.WSGIApplication([
@@ -311,5 +367,10 @@ app = webapp2.WSGIApplication([
     ('/Add_Image', AddImage),
     ('/img', ImageHandler),
     ('/search', Search),
+    ('/crontask', CronTask),
+    ('/update5',Update5),
+    ('/updatehour',UpdateHour),
+    ('/updateday', UpdateDay),
+    ('/trending', Trending),
     ('/error', ErrorPage)
 ], debug=True)

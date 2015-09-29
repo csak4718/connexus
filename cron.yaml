@@ -1,5 +1,16 @@
 cron:
 - description: update trends
-  url: /.*
-  schedule: every 1 minutes
-  #schedule: every 5 minutes
+  url: /crontask
+  schedule: every 5 minutes
+
+- description: update 5 min
+  url: /update5
+  schedule: every 5 minutes
+
+- description: update 1 hour
+  url: /updatehour
+  schedule: every 60 minutes
+
+- description: update 1 day
+  url: /updateday
+  schedule: every 1440 minutes
