@@ -16,8 +16,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     autoescape=True)
 
 from trending import *
-# class Owner(ndb.Model):
-#     email = ndb.StringProperty()
+
 class Stream(ndb.Model):
     ownerEmail = ndb.StringProperty()
     name = ndb.StringProperty()
@@ -68,7 +67,7 @@ class ManagePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
         if user:
-            myStreamList = Stream().query(Stream.ownerEmail == user.nickname())#.fetch()
+            myStreamList = Stream().query(Stream.ownerEmail == user.email())#.fetch()
             numViewsList_my = []
             lastupdatetime_my = []
             numberofpicture_my = []
@@ -92,16 +91,17 @@ class ManagePage(webapp2.RequestHandler):
             lastupdatetime_sub = []
             numberofpicture_sub = []
 
-            lst = Subscriber().query(Subscriber.email == user.nickname())#.fetch()
+            lst = Subscriber.query(Subscriber.email == user.email())
             if lst:
                 for elem in lst:
                     subscribeStreamList.append(elem.stream)
                     viewCount = View.query(View.stream == elem.stream).count(limit=None)
                     Piccount = Image.query(Image.stream == elem.stream).count(limit=None)
-
+                    print "elem.stream:"
+                    print elem.stream
                     query_image = Image.query(Image.stream == elem.stream).order(-Image.time).fetch()
                     if len(query_image) == 0:
-                        updatetime = elem.time.strftime('%I:%M%p on %b %d, %Y')
+                        updatetime = elem.stream.get().time.strftime('%I:%M%p on %b %d, %Y')
                     else:
                         updatetime = query_image[0].time.strftime('%I:%M%p on %b %d, %Y')
 
@@ -124,7 +124,7 @@ class DeleteStream(webapp2.RequestHandler):
     def post(self):
         user = users.get_current_user()
         if user:
-            myStreamList = Stream.query(Stream.ownerEmail == user.nickname()).fetch()
+            myStreamList = Stream.query(Stream.ownerEmail == user.email()).fetch()
             for myStream in myStreamList:
                 check = self.request.get(myStream.name)
                 if check=='on':
@@ -154,7 +154,7 @@ class CreatePage(webapp2.RequestHandler):
                 tagsString = self.request.get('tags')
                 subscribersString = self.request.get('subscribers')
 
-                ownerEmail = user.nickname()
+                ownerEmail = user.email()
 
                 stream = Stream()
                 stream.ownerEmail = ownerEmail
@@ -246,7 +246,7 @@ class ViewSinglePage(webapp2.RequestHandler):
         imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
 
         ownerCheck = 'notOwner'
-        if streamKey.get().ownerEmail == user.nickname():
+        if streamKey.get().ownerEmail == user.email():
             ownerCheck = 'isOwner'
 
 
@@ -271,14 +271,14 @@ class Subscribe(webapp2.RequestHandler):
         # avoid repeated subscribe
         isRepeat = False
         for subscriber in subscribersList:
-            if subscriber.email == user.nickname():
+            if subscriber.email == user.email():
                 isRepeat = True
                 break
 
         if not isRepeat:
             subscriber = Subscriber()
             subscriber.stream = streamKey
-            subscriber.email = user.nickname()
+            subscriber.email = user.email()
             subscriber.put()
 
         imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
@@ -294,7 +294,7 @@ class Unsubscribe(webapp2.RequestHandler):
     def post(self):
         user = users.get_current_user()
         if user:
-            lst = Subscriber().query(Subscriber.email == user.nickname()).fetch()
+            lst = Subscriber().query(Subscriber.email == user.email()).fetch()
             for subscriber in lst:
                 stream_name = self.request.get(subscriber.stream.get().name)
                 if stream_name and stream_name=='on':
@@ -345,15 +345,108 @@ class Trending(webapp2.RequestHandler):
         stream_list = list()
         view_list = list()
         for item in Popular_stream_list:
-            stream_list.append(item.streams)
+            stream_list.append(item.stream)
             view_list.append(item.numberofviews)
 
         FinalResult = zip(stream_list, view_list)
 
-        template_values = {'Streams': FinalResult}
+        updateRateMessage = "Unavailable"
+
+        template_values = {
+            'Streams': FinalResult,
+            'updateRateMessage': updateRateMessage,
+        }
         template = JINJA_ENVIRONMENT.get_template('Trending.html')
         self.response.write(template.render(template_values))
+    def post(self):
+        user = users.get_current_user()
+        if user:
+            Popular_stream_list = PopularStreams.query().order(-PopularStreams.numberofviews).fetch()
+            stream_list = list()
+            view_list = list()
+            for item in Popular_stream_list:
+                stream_list.append(item.stream)
+                view_list.append(item.numberofviews)
+            FinalResult = zip(stream_list, view_list)
 
+
+            lst = EmailUpdateList.query(EmailUpdateList.mail == user.email()).fetch()
+            if len(lst) == 0:
+                trendRate = self.request.get('trendRate')
+                if trendRate == 'Every 5 minutes':
+                    updateRateMessage = "You will receive trending report every 5 minutes"
+                    emailUpdateList = EmailUpdateList()
+                    emailUpdateList.mail = user.email()
+                    print "emailUpdateList.mail: "
+                    print emailUpdateList.mail
+                    emailUpdateList.duration = 5
+                    emailUpdateList.put()
+                elif trendRate == 'Every 1 hour':
+                    updateRateMessage = "You will receive trending report every 1 hour"
+                    emailUpdateList = EmailUpdateList()
+                    emailUpdateList.mail = user.email()
+                    emailUpdateList.duration = 60
+                    emailUpdateList.put()
+                elif trendRate == 'Every day':
+                    updateRateMessage = "You will receive trending report every day"
+                    emailUpdateList = EmailUpdateList()
+                    emailUpdateList.mail = user.email()
+                    emailUpdateList.duration = 1440
+                    emailUpdateList.put()
+                elif trendRate == 'No report':
+                    updateRateMessage = "You have never registered trending report before"
+            elif len(lst)==1:
+                emailUpdateList = lst[0]
+                trendRate = self.request.get('trendRate')
+                if trendRate == 'Every 5 minutes':
+                    updateRateMessage = "You will receive trending report every 5 minutes"
+                    emailUpdateList.duration = 5
+                    emailUpdateList.put()
+                elif trendRate == 'Every 1 hour':
+                    updateRateMessage = "You will receive trending report every 1 hour"
+                    emailUpdateList.duration = 60
+                    emailUpdateList.put()
+                elif trendRate == 'Every day':
+                    updateRateMessage = "You will receive trending report every day"
+                    emailUpdateList.duration = 1440
+                    emailUpdateList.put()
+                elif trendRate == 'No report':
+                    updateRateMessage = "You canceled receiving trending report"
+                    emailUpdateList.key.delete()
+            else:
+                # Error protection: delete all, then recreate.
+                for emailUpdateList in lst:
+                    emailUpdateList.key.delete()
+
+                trendRate = self.request.get('trendRate')
+                if trendRate == 'Every 5 minutes':
+                    updateRateMessage = "You will receive trending report every 5 minutes"
+                    emailUpdateList = EmailUpdateList()
+                    emailUpdateList.mail = user.email()
+                    emailUpdateList.duration = 5
+                    emailUpdateList.put()
+                elif trendRate == 'Every 1 hour':
+                    updateRateMessage = "You will receive trending report every 1 hour"
+                    emailUpdateList = EmailUpdateList()
+                    emailUpdateList.mail = user.email()
+                    emailUpdateList.duration = 60
+                    emailUpdateList.put()
+                elif trendRate == 'Every day':
+                    updateRateMessage = "You will receive trending report every day"
+                    emailUpdateList = EmailUpdateList()
+                    emailUpdateList.mail = user.email()
+                    emailUpdateList.duration = 1440
+                    emailUpdateList.put()
+                elif trendRate == 'No report':
+                    updateRateMessage = "You canceled receiving trending report"
+
+
+            template_values = {
+                'Streams': FinalResult,
+                'updateRateMessage': updateRateMessage,
+            }
+            template = JINJA_ENVIRONMENT.get_template('Trending.html')
+            self.response.write(template.render(template_values))
 
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
@@ -372,5 +465,5 @@ app = webapp2.WSGIApplication([
     ('/updatehour',UpdateHour),
     ('/updateday', UpdateDay),
     ('/trending', Trending),
-    ('/error', ErrorPage)
+    ('/error', ErrorPage),
 ], debug=True)

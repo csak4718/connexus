@@ -11,12 +11,24 @@
       </a>
       <div class="caption">
         <h3>{{stream.get().name}}</h3>
-        <p>Created by {{stream.get().owner}}</p>
-        <p>Number of Views in the past Hour {{numberofview}}</p>
+        <p>Created by {{stream.get().ownerEmail}}</p>
+        <p>Number of Views in the past Hour: {{numberofview}}</p>
       </div>
     </div>
   </div>
   {% endfor %}
-</div>
 
+  <p>Email trending report</p>
+  <form action="/trending" method="post">
+    <input type="radio" name="trendRate" value="No report"> No report<br></input>
+    <input type="radio" name="trendRate" value="Every 5 minutes"> Every 5 minutes<br></input>
+    <input type="radio" name="trendRate" value="Every 1 hour"> Every 1 hour<br></input>
+    <input type="radio" name="trendRate" value="Every day"> Every day<br></input>
+    <input type="submit" value="Update rate">
+  </form>
+  {% if updateRateMessage|string() == 'Unavailable' %}
+  {% else %}
+      <strong>{{ updateRateMessage }}</strong>
+  {% endif %}
+</div>
 {% endblock %}

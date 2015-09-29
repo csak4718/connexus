@@ -26,11 +26,13 @@ class Stream(ndb.Model):
     coverUrl = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
 class PopularStreams(ndb.Model):
-    streams = ndb.KeyProperty(kind='Stream')
+    stream = ndb.KeyProperty(kind='Stream')
     numberofviews = ndb.IntegerProperty()
 class View(ndb.Model):
     stream = ndb.KeyProperty(kind=Stream)
     time = ndb.DateTimeProperty(auto_now_add=True)
+
+# Send trending report to 'mail' every 'duration'
 class EmailUpdateList(ndb.Model):
     mail = ndb.StringProperty()
     duration = ndb.IntegerProperty()
@@ -47,51 +49,51 @@ class CronTask(webapp2.RequestHandler):
 
         ViewsWeCare = View.query(View.time >= hour_ago).fetch()
 
-        list_of_views=list()
-        TrendingStreams=list()
-        Viewnumber=list()
+        list_of_streams=list()
+        trendingStreams=list()
+        viewNumber=list()
 
         for view in ViewsWeCare:
             if hour_ago <= view.time:
-                list_of_views.append(view.stream)
+                list_of_streams.append(view.stream)
             else:
                 pass
 
-        TrendingStreams_Temp = collections.Counter(list_of_views).most_common(5)
+        TrendingStreams_Temp = collections.Counter(list_of_streams).most_common(5)
 
 
-        for streams in TrendingStreams_Temp:
+        for tupleElem in TrendingStreams_Temp:
             FinalResult = PopularStreams()
-            FinalResult.streams = streams[0]
-            FinalResult.numberofviews = streams[1]
+            FinalResult.stream = tupleElem[0]
+            FinalResult.numberofviews = tupleElem[1]
             FinalResult.put()
 
 class Update5(webapp2.RequestHandler):
     def get(self):
-        mail_list = EmailUpdateList.query( EmailUpdateList.duration == 5 )
+        mail_list = EmailUpdateList.query( EmailUpdateList.duration == 5 ).fetch()
         for user in mail_list:
             if len(user.mail) > 1:
-                mail.send_mail(sender = "Connexus :: Info info@<connexus-1079>.appspotmail.com",
+                mail.send_mail(sender = "Connexus info@connexus-fall15.appspotmail.com",
                                 to = user.mail,
                                 subject = "Update Trending",
-                                body = """ The New Trending is now Live! """)
+                                body = " The New Trending is now Live! ")
 
 class UpdateHour(webapp2.RequestHandler):
     def get(self):
-        mail_list = EmailUpdateList.query( EmailUpdateList.duration == 60 )
+        mail_list = EmailUpdateList.query( EmailUpdateList.duration == 60 ).fetch()
         for user in mail_list:
             if len(user.mail) > 1:
-                mail.send_mail(sender = "Connexus :: Info info@<connexus-1079.appspotmail.com>",
+                mail.send_mail(sender = "Connexus info@connexus-fall15.appspotmail.com",
                                 to = user.mail,
                                 subject = "Update Trending",
                                 body = """ The New Trending is now Live! """)
 
 class UpdateDay(webapp2.RequestHandler):
     def get(self):
-        mail_list = EmailUpdateList.query( EmailUpdateList.duration == 1440 )
+        mail_list = EmailUpdateList.query( EmailUpdateList.duration == 1440 ).fetch()
         for user in mail_list:
             if len(user.mail) > 1:
-                mail.send_mail(sender = "Connexus :: Info <info@connexus-1079.appspotmail.com>",
+                mail.send_mail(sender = "Connexus info@connexus-fall15.appspotmail.com",
                                 to = user.mail,
                                 subject = "Update Trending",
                                 body = """ The New Trending is now Live! """)
