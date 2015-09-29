@@ -146,7 +146,6 @@ class CreatePage(webapp2.RequestHandler):
             if len(streamList) != 0:
                 self.redirect('/error?errorType=0')
             else:
-                #TODO: task 2
                 inviteMsg = self.request.get('msg')
                 coverUrl = self.request.get('cover_url')
                 tagsString = self.request.get('tags')
@@ -262,19 +261,20 @@ class ViewSinglePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
         streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
 
+        pic_skip = 0
+
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
         ownerCheck = 'notOwner'
         if streamKey.get().ownerEmail == user.email():
             ownerCheck = 'isOwner'
-
-
 
         template_values = {
             'imgList':imgList,
             'streamKey': streamKey,
             'ownerCheck': ownerCheck,
-        }
+            'skiptimes': pic_skip,
+            }
         template = JINJA_ENVIRONMENT.get_template('View_single.html')
         self.response.write(template.render(template_values))
 
@@ -282,10 +282,41 @@ class ViewSinglePage(webapp2.RequestHandler):
         view.stream = streamKey
         view.put()
 
-class MorePictures(webapp2.RequestHandler):
-    #TODO
-    pass
+    def post(self):
+        user = users.get_current_user()
+        skiptimes = self.request.get('skiptimes')
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
 
+        pic_skip = int(skiptimes)+3
+
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
+
+        if len(imgList) == 0:
+            pic_skip = pic_skip - 3
+        else:
+            pass
+
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
+
+        
+
+
+        ownerCheck = 'notOwner'
+        if streamKey.get().ownerEmail == user.email():
+            ownerCheck = 'isOwner'
+
+        template_values = {
+            'imgList':imgList,
+            'streamKey': streamKey,
+            'ownerCheck': ownerCheck,
+            'skiptimes': pic_skip,
+            }
+        template = JINJA_ENVIRONMENT.get_template('View_single.html')
+        self.response.write(template.render(template_values))
+
+        view = View()
+        view.stream = streamKey
+        view.put()
 
 class Subscribe(webapp2.RequestHandler):
     def post(self):
