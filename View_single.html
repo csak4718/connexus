@@ -9,7 +9,7 @@
     <div class="thumbnail">
       <img src="/img?img_id={{img.key.urlsafe()}}" alt="image">
       <div class="caption">
-        <p>Created at {{img.time}}</p>
+        <p>Created at {{img.time.strftime('%I:%M%p on %b %d, %Y')}}</p>
       </div>
     </div>
   </div>
