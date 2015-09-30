@@ -21,3 +21,9 @@ indexes:
   - name: stream.name
   - name: time
     direction: desc
+
+- kind: Stream
+  properties:
+  - name: name
+  - name: time
+    direction: desc
