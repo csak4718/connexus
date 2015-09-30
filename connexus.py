@@ -221,38 +221,47 @@ class Search(webapp2.RequestHandler):
         streamset=set()
         searchtarget = self.request.get('target')
         # targetTagList = self.request.get('target').split(', ')
-        name_result = Stream.query(searchtarget == Stream.name).order(-Stream.time)
-        tag_result = Tag.query(searchtarget == Tag.name)
+        if len(searchtarget) > 0:
+            name_result = Stream.query(searchtarget == Stream.name).order(-Stream.time)
+            tag_result = Tag.query(searchtarget == Tag.name)
 
-        result_list = name_result.fetch(5)
+            result_list = name_result.fetch(5)
 
-        for names in name_result:
-            streamKey = names.key
-            if streamKey not in streamset:      #create a set of streams wihch match the result
-                streamset.add(streamKey)
+            for names in name_result:
+                streamKey = names.key
+                if streamKey not in streamset:      #create a set of streams wihch match the result
+                    streamset.add(streamKey)
+                else:
+                    pass
+
+            i = 0
+            for tags in tag_result:
+                key_of_stream = tags.stream
+                if i == 5:
+                    pass
+                else:
+                    if key_of_stream in streamset:
+                        pass
+                    else:
+                        streamset.add(key_of_stream)
+                        result_list.append(key_of_stream.get())
+                        i = i+1
+
+            if len(result_list)==0:
+                template_values={
+                    'Results':result_list,
+                    }
+                template = JINJA_ENVIRONMENT.get_template('Search.html')
+                self.response.write(template.render(template_values))
             else:
-                pass
-
-        for tags in tag_result:
-            key_of_stream = tags.stream
-            if key_of_stream in streamset:
-                pass
-            else:
-                streamset.add(key_of_stream)
-                result_list.append(key_of_stream.get())
-
-        if len(result_list)==0:
-            template_values={
-                'Results':result_list,
-            }
-            template = JINJA_ENVIRONMENT.get_template('Search.html')
-            self.response.write(template.render(template_values))
+                template_values={
+                    'Results':result_list,
+                    }
+                template = JINJA_ENVIRONMENT.get_template('Search.html')
+                self.response.write(template.render(template_values))
         else:
-            template_values={
-                'Results':result_list,
-            }
             template = JINJA_ENVIRONMENT.get_template('Search.html')
-            self.response.write(template.render(template_values))
+            self.response.write(template.render())
 
 
 
@@ -288,18 +297,11 @@ class ViewSinglePage(webapp2.RequestHandler):
         streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
 
         pic_skip = int(skiptimes)+3
+        pic_to_display = pic_skip
+        RemainingImgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
 
-        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
-
-        if len(imgList) == 0:
-            pic_skip = pic_skip - 3
-        else:
-            pass
-
-        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
-
-        
-
+        pic_to_display = pic_to_display + len(RemainingImgList)
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(pic_to_display)
 
         ownerCheck = 'notOwner'
         if streamKey.get().ownerEmail == user.email():
@@ -363,8 +365,10 @@ class AddImage(webapp2.RequestHandler):
             streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
             img = Image()
             img.stream = streamKey
-            img.full_size_image = self.request.get('img')
+            img_temp = self.request.get('img')
+            img.full_size_image = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
             img.put()
+
             self.redirect('/View_single?streamKey='+streamKey.urlsafe())
         else:
             self.redirect('/error?errorType=1')
