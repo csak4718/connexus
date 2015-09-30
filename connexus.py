@@ -221,43 +221,47 @@ class Search(webapp2.RequestHandler):
         streamset=set()
         searchtarget = self.request.get('target')
         # targetTagList = self.request.get('target').split(', ')
-        name_result = Stream.query(searchtarget == Stream.name).order(-Stream.time)
-        tag_result = Tag.query(searchtarget == Tag.name)
+        if len(searchtarget) > 0:
+            name_result = Stream.query(searchtarget == Stream.name).order(-Stream.time)
+            tag_result = Tag.query(searchtarget == Tag.name)
 
-        result_list = name_result.fetch(5)
+            result_list = name_result.fetch(5)
 
-        for names in name_result:
-            streamKey = names.key
-            if streamKey not in streamset:      #create a set of streams wihch match the result
-                streamset.add(streamKey)
-            else:
-                pass
+            for names in name_result:
+                streamKey = names.key
+                if streamKey not in streamset:      #create a set of streams wihch match the result
+                    streamset.add(streamKey)
+                else:
+                    pass
 
-        i = 0
-        for tags in tag_result:
-            key_of_stream = tags.stream
-            if i == 5:
-                pass
-            else:
-                if key_of_stream in streamset:
+            i = 0
+            for tags in tag_result:
+                key_of_stream = tags.stream
+                if i == 5:
                     pass
                 else:
-                    streamset.add(key_of_stream)
-                    result_list.append(key_of_stream.get())
-                    i = i+1
+                    if key_of_stream in streamset:
+                        pass
+                    else:
+                        streamset.add(key_of_stream)
+                        result_list.append(key_of_stream.get())
+                        i = i+1
 
-        if len(result_list)==0:
-            template_values={
-                'Results':result_list,
-            }
-            template = JINJA_ENVIRONMENT.get_template('Search.html')
-            self.response.write(template.render(template_values))
+            if len(result_list)==0:
+                template_values={
+                    'Results':result_list,
+                    }
+                template = JINJA_ENVIRONMENT.get_template('Search.html')
+                self.response.write(template.render(template_values))
+            else:
+                template_values={
+                    'Results':result_list,
+                    }
+                template = JINJA_ENVIRONMENT.get_template('Search.html')
+                self.response.write(template.render(template_values))
         else:
-            template_values={
-                'Results':result_list,
-            }
             template = JINJA_ENVIRONMENT.get_template('Search.html')
-            self.response.write(template.render(template_values))
+            self.response.write(template.render())
 
 
 
