@@ -14,6 +14,8 @@ from google.appengine.api import mail
 import jinja2
 import webapp2
 
+from connexus import *
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
@@ -31,6 +33,12 @@ class PopularStreams(ndb.Model):
 class View(ndb.Model):
     stream = ndb.KeyProperty(kind=Stream)
     time = ndb.DateTimeProperty(auto_now_add=True)
+class ListofIndex(ndb.Model):
+    index = ndb.StringProperty()
+    time = ndb.DateTimeProperty(auto_now_add=True)
+class Tag(ndb.Model):
+    name = ndb.StringProperty()
+    stream = ndb.KeyProperty(kind=Stream)
 
 # Send trending report to 'mail' every 'duration'
 class EmailUpdateList(ndb.Model):
@@ -68,12 +76,37 @@ class CronTask(webapp2.RequestHandler):
             FinalResult.numberofviews = tupleElem[1]
             FinalResult.put()
 
+class UpdateListAuto(webapp2.RequestHandler):
+    def get(self):
+        LastResult = ListofIndex.query().fetch()
+
+        for index in LastResult:
+            index.key.delete()
+
+        namelist = Stream.query().fetch()
+        taglist = Tag.query().fetch()
+
+        for stream in namelist:
+            Result = ListofIndex()
+            Result.index = stream.name
+            Result.put()
+
+        tagset=set()
+        for tag in taglist:
+            if tag.name not in tagset:
+                tagset.add(tag.name)
+                Result = ListofIndex()
+                Result.index = tag.name
+                Result.put()
+            else:
+                pass
+
 class Update5(webapp2.RequestHandler):
     def get(self):
         mail_list = EmailUpdateList.query( EmailUpdateList.duration == 5 ).fetch()
         for user in mail_list:
             if len(user.mail) > 1:
-                mail.send_mail(sender = "Connexus info@connexus-fall15.appspotmail.com",
+                mail.send_mail(sender = "Connexus info@connexus-1079.appspotmail.com",
                                 to = user.mail,
                                 subject = "Update Trending",
                                 body = " The New Trending is now Live! ")
@@ -83,7 +116,7 @@ class UpdateHour(webapp2.RequestHandler):
         mail_list = EmailUpdateList.query( EmailUpdateList.duration == 60 ).fetch()
         for user in mail_list:
             if len(user.mail) > 1:
-                mail.send_mail(sender = "Connexus info@connexus-fall15.appspotmail.com",
+                mail.send_mail(sender = "Connexus info@connexus-1079.appspotmail.com",
                                 to = user.mail,
                                 subject = "Update Trending",
                                 body = """ The New Trending is now Live! """)
@@ -93,7 +126,7 @@ class UpdateDay(webapp2.RequestHandler):
         mail_list = EmailUpdateList.query( EmailUpdateList.duration == 1440 ).fetch()
         for user in mail_list:
             if len(user.mail) > 1:
-                mail.send_mail(sender = "Connexus info@connexus-fall15.appspotmail.com",
+                mail.send_mail(sender = "Connexus info@connexus-1079.appspotmail.com",
                                 to = user.mail,
                                 subject = "Update Trending",
                                 body = """ The New Trending is now Live! """)

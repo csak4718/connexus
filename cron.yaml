@@ -3,6 +3,10 @@ cron:
   url: /crontask
   schedule: every 5 minutes
 
+- description: update 1 hour for search list
+  url: /updatelistauto
+  schedule: every 60 minutes
+
 - description: update 5 min
   url: /update5
   schedule: every 5 minutes

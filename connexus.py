@@ -7,6 +7,7 @@ from google.appengine.ext import ndb
 from google.appengine.api import images
 from google.appengine.api import mail
 
+import json
 import jinja2
 import webapp2
 
@@ -397,6 +398,22 @@ class ImageHandler(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'image/png'
         self.response.out.write(img.full_size_image)
 
+class SearchList(webapp2.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+        term = self.request.get('term')
+        result = dict()
+        if len(term) > 0:
+            candidate = ListofIndex.query().order(-ListofIndex.time).fetch()
+            for index in candidate:
+                if term.lower() in index.index.lower():
+                    result[index.index] = index.index
+                else:
+                    pass
+            self.response.write(json.dumps(result))
+        else:
+            self.response.write(json.dumps(result))
+
 class Trending(webapp2.RequestHandler):
     def get(self):
         Popular_stream_list = PopularStreams.query().order(-PopularStreams.numberofviews).fetch()
@@ -521,5 +538,7 @@ app = webapp2.WSGIApplication([
     ('/updatehour',UpdateHour),
     ('/updateday', UpdateDay),
     ('/trending', Trending),
+    ('/updatelistauto', UpdateListAuto),
+    ('/searchlist', SearchList),
     ('/error', ErrorPage),
 ], debug=True)
