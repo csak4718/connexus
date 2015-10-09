@@ -362,12 +362,13 @@ class Unsubscribe(webapp2.RequestHandler):
 
 class AddImage(webapp2.RequestHandler):
     def post(self):
-        if self.request.get('img') != "":
+        if self.request.get('file') != "":
             streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
             img = Image()
             img.stream = streamKey
-            img_temp = self.request.get('img')
-            img.full_size_image = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            # img_temp = self.request.get('img')
+            # img.full_size_image = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            img.full_size_image = self.request.get('file')
             img.put()
 
             self.redirect('/View_single?streamKey='+streamKey.urlsafe())

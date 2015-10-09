@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}View_single{% endblock %}
+{% block content %}
+
+<script>
+
+</script>
+
+<div class="row">
+{% if imgList %}
+  {% for img in imgList %}
+  <div class="col-sm-6 col-md-4">
+    <div class="thumbnail">
+      <img src="/img?img_id={{img.key.urlsafe()}}" alt="image">
+      <div class="caption">
+        <p>Created at {{img.time.strftime('%I:%M%p on %b %d, %Y')}}</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  <form action="/View_single?streamKey={{streamKey.urlsafe()}}" method="post">
+    <button id="search_btn" type="submit" class="btn btn-primary" value="{{skiptimes}}" name="skiptimes">MorePictrues</button>
+  </form>
+{% else %}
+  <div class="col-sm-6 col-md-4">
+    <div class="thumbnail">
+      <img src="assets/NoCoverAvailable.jpg" alt="NoImage">
+    </div>
+  </div>
+{% endif %}
+</div>
+<div class="row">
+  {% if ownerCheck|string() == 'isOwner' %}
+  <form action="/Add_Image?streamKey={{streamKey.urlsafe()}}" enctype="multipart/form-data" method="post">
+    <div><input type="file" name="img"/></div>
+    <input class="btn btn-default" type="submit" value="Add Image">
+  </form>
+  {% else %}
+  <form id="multipleupload" action="/subscribe?streamKey={{streamKey.urlsafe()}}" enctype="multipart/form-data" method="post" class="dropzone">
+    <input class="btn btn-default" type="submit" value="Subscribe">
+  </form>
+  {% endif %}
+
+
+<br>
+<br>
+<div class="fb-share-button" data-href="http://connexus-fall15.appspot.com/View_single?streamKey={{streamKey.urlsafe()}}" data-width="200" data-type="button"></div>
+{% endblock %}
