@@ -38,7 +38,10 @@
   {% for img in imgList %}
   <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
-      <img src="/img?img_id={{img.key.urlsafe()}}" alt="image">
+      <a href="/img?img_id={{img.key.urlsafe()}}" data-lightbox="StreamGallery" data-title="Click Me!" rel="lightbox[StreamGallery]">
+      <!-- <img src="/img?img_id={{img.key.urlsafe()}}" alt="image"> -->
+        <img src="/img_thumb?img_id={{img.key.urlsafe()}}" alt="image">
+      </a>
       <div class="caption">
         <p>Created at {{img.time.strftime('%I:%M%p on %b %d, %Y')}}</p>
       </div>
@@ -130,7 +133,6 @@
   {% endif %}
 </div>
 
-
 <script type="text/javascript">
   var previewNode = document.querySelector("#template");
   previewNode.id="";
@@ -142,6 +144,7 @@
     thumbnailWidth: 80,
     thumbnailHeight: 80,
     parallelUploads: 20,
+    paramName: "img",
     previewTemplate: previewTemplate,
     autoQueue: false, // Make sure the files aren't queued until manually added
     previewsContainer: "#previews", // Define the container to display the previews

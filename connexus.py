@@ -4,6 +4,7 @@ import urllib
 
 from google.appengine.api import users
 from google.appengine.ext import ndb
+from google.appengine.ext.blobstore import BlobKey
 from google.appengine.api import images
 from google.appengine.api import mail
 
@@ -21,13 +22,14 @@ from trending import *
 class Stream(ndb.Model):
     ownerEmail = ndb.StringProperty()
     name = ndb.StringProperty()
-    inviteMsg = ndb.StringProperty(indexed = False)
+    inviteMsg = ndb.StringProperty(indexed=False)
     coverUrl = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
 class Image(ndb.Model):
     time = ndb.DateTimeProperty(auto_now_add=True)
     stream = ndb.KeyProperty(kind=Stream)
     full_size_image = ndb.BlobProperty()
+    Thumbnail = ndb.BlobProperty()
 class Subscriber(ndb.Model):
     stream = ndb.KeyProperty(kind=Stream)
     email = ndb.StringProperty()
@@ -362,13 +364,13 @@ class Unsubscribe(webapp2.RequestHandler):
 
 class AddImage(webapp2.RequestHandler):
     def post(self):
-        if self.request.get('file') != "":
+        if self.request.get('img') != "":
             streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
             img = Image()
             img.stream = streamKey
-            # img_temp = self.request.get('img')
-            # img.full_size_image = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-            img.full_size_image = self.request.get('file')
+            img_temp = self.request.get('img')
+            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            img.full_size_image = img_temp
             img.put()
 
             self.redirect('/View_single?streamKey='+streamKey.urlsafe())
@@ -398,6 +400,13 @@ class ImageHandler(webapp2.RequestHandler):
         img = ImageKey.get()
         self.response.headers['Content-Type'] = 'image/png'
         self.response.out.write(img.full_size_image)
+
+class ImageHandler_Thumb(webapp2.RequestHandler):
+    def get(self):
+        ImageKey = ndb.Key(urlsafe=self.request.get('img_id'))
+        img = ImageKey.get()
+        self.response.headers['Content-Type'] = 'image/png'
+        self.response.out.write(img.Thumbnail)
 
 class SearchList(webapp2.RequestHandler):
     def get(self):
@@ -533,6 +542,7 @@ app = webapp2.WSGIApplication([
     ('/deleteStream', DeleteStream),
     ('/Add_Image', AddImage),
     ('/img', ImageHandler),
+    ('/img_thumb', ImageHandler_Thumb),
     ('/search', Search),
     ('/crontask', CronTask),
     ('/update5',Update5),
