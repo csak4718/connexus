@@ -9,6 +9,8 @@ from google.appengine.api import mail
 
 import jinja2
 import webapp2
+import json
+import datetime
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -23,16 +25,21 @@ class Stream(ndb.Model):
     inviteMsg = ndb.StringProperty(indexed = False)
     coverUrl = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
+
 class Image(ndb.Model):
     time = ndb.DateTimeProperty(auto_now_add=True)
     stream = ndb.KeyProperty(kind=Stream)
     full_size_image = ndb.BlobProperty()
+    geoPt = ndb.GeoPtProperty()
+
 class Subscriber(ndb.Model):
     stream = ndb.KeyProperty(kind=Stream)
     email = ndb.StringProperty()
+
 class View(ndb.Model):
     stream = ndb.KeyProperty(kind=Stream)
     time = ndb.DateTimeProperty(auto_now_add=True)
+
 class Tag(ndb.Model):
     name = ndb.StringProperty()
     stream = ndb.KeyProperty(kind=Stream)
@@ -198,9 +205,6 @@ class CreatePage(webapp2.RequestHandler):
                                                 subject = "You are invited to a New Stream!",
                                                 body = "You are invited to stream "+name+ "." )
 
-
-
-
                 self.redirect('/manage')
 
 class ViewAllPage(webapp2.RequestHandler):
@@ -229,7 +233,7 @@ class Search(webapp2.RequestHandler):
 
             for names in name_result:
                 streamKey = names.key
-                if streamKey not in streamset:      #create a set of streams wihch match the result
+                if streamKey not in streamset:      #create a set of streams which match the result
                     streamset.add(streamKey)
                 else:
                     pass
@@ -262,9 +266,6 @@ class Search(webapp2.RequestHandler):
         else:
             template = JINJA_ENVIRONMENT.get_template('Search.html')
             self.response.write(template.render())
-
-
-
 
 class ViewSinglePage(webapp2.RequestHandler):
     def get(self):
@@ -362,14 +363,28 @@ class Unsubscribe(webapp2.RequestHandler):
 class AddImage(webapp2.RequestHandler):
     def post(self):
         if self.request.get('img') != "":
-            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-            img = Image()
-            img.stream = streamKey
-            img_temp = self.request.get('img')
-            img.full_size_image = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-            img.put()
+            imgLocation = self.request.get('imgLocation')
+            if imgLocation != "":
+                streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+                img = Image()
+                img.stream = streamKey
+                img_temp = self.request.get('img')
+                img.full_size_image = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+                img.geoPt = ndb.GeoPt(imgLocation)
+                img.put()
 
-            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+                self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+            else:
+                # user chose not to share his geo location
+                streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+                img = Image()
+                img.stream = streamKey
+                img_temp = self.request.get('img')
+                img.full_size_image = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+                img.put()
+
+                self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+
         else:
             self.redirect('/error?errorType=1')
 
@@ -396,6 +411,14 @@ class ImageHandler(webapp2.RequestHandler):
         img = ImageKey.get()
         self.response.headers['Content-Type'] = 'image/png'
         self.response.out.write(img.full_size_image)
+
+class MarkerImageHandler(webapp2.RequestHandler):
+    def get(self):
+        ImageKey = ndb.Key(urlsafe=self.request.get('img_id'))
+        img = ImageKey.get()
+        markerImage = images.resize(img.full_size_image ,width=100, height=100, crop_to_fit = True)
+        self.response.headers['Content-Type'] = 'image/png'
+        self.response.out.write(markerImage)
 
 class Trending(webapp2.RequestHandler):
     def get(self):
@@ -504,6 +527,45 @@ class Trending(webapp2.RequestHandler):
             template = JINJA_ENVIRONMENT.get_template('Trending.html')
             self.response.write(template.render(template_values))
 
+class Geo_Data(webapp2.RequestHandler):
+    def get(self):
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+        query_begin_date = self.request.get('start')
+        query_end_date = self.request.get('end')
+        query_begin_date_obj = datetime.datetime.strptime(query_begin_date, "%Y-%m-%dT%H:%M:%S.%fZ")
+        query_end_date_obj = datetime.datetime.strptime(query_end_date, "%Y-%m-%dT%H:%M:%S.%fZ")
+
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
+        for img in imgList:
+            if not query_begin_date_obj <= img.time <= query_end_date_obj:
+                imgList.remove(img)
+
+
+        self.response.headers['Content-Type'] = 'application/json'
+        markers = []
+        for img in imgList:
+            content = '<img src="/markerImg?img_id=' + img.key.urlsafe() + '" alt="image">'
+            markers.append({'latitude': img.geoPt.lat, 'longitude': img.geoPt.lon, 'content': content})
+
+        data = {
+            'markers': markers,
+        }
+        self.response.out.write(json.dumps(data))
+
+
+class Geo(webapp2.RequestHandler):
+    def get(self):
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+
+        template_values = {
+            'streamKey': streamKey,
+        }
+        template = JINJA_ENVIRONMENT.get_template('geo.html')
+        self.response.write(template.render(template_values))
+
+
+
+
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
     ('/manage', ManagePage),
@@ -515,6 +577,7 @@ app = webapp2.WSGIApplication([
     ('/deleteStream', DeleteStream),
     ('/Add_Image', AddImage),
     ('/img', ImageHandler),
+    ('/markerImg', MarkerImageHandler),
     ('/search', Search),
     ('/crontask', CronTask),
     ('/update5',Update5),
@@ -522,4 +585,6 @@ app = webapp2.WSGIApplication([
     ('/updateday', UpdateDay),
     ('/trending', Trending),
     ('/error', ErrorPage),
+    ('/geo_data', Geo_Data),
+    ('/geo', Geo),
 ], debug=True)

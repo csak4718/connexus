@@ -13,6 +13,8 @@ handlers:
   static_dir: css
 - url: /assets
   static_dir: assets
+- url: /js
+  static_dir: js
 
 - url: /.*
   script: connexus.app
@@ -24,4 +26,6 @@ libraries:
 - name: webapp2
   version: latest
 - name: jinja2
+  version: latest
+- name: PIL
   version: latest
