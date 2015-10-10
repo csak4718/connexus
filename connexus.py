@@ -4,11 +4,10 @@ import urllib
 
 from google.appengine.api import users
 from google.appengine.ext import ndb
-from google.appengine.ext.blobstore import BlobKey
 from google.appengine.api import images
 from google.appengine.api import mail
+from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
-import json
 import jinja2
 import webapp2
 import json
@@ -272,27 +271,36 @@ class Search(webapp2.RequestHandler):
 class ViewSinglePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
-        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+        # print "STREAM KEY"
+        # print self.request.get('streamKey')
 
-        pic_skip = 0
+        try:
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            pic_skip = 0
 
-        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
-        ownerCheck = 'notOwner'
-        if streamKey.get().ownerEmail == user.email():
-            ownerCheck = 'isOwner'
+            imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
+            ownerCheck = 'notOwner'
+            if streamKey.get().ownerEmail == user.email():
+                ownerCheck = 'isOwner'
 
-        template_values = {
-            'imgList':imgList,
-            'streamKey': streamKey,
-            'ownerCheck': ownerCheck,
-            'skiptimes': pic_skip,
-            }
-        template = JINJA_ENVIRONMENT.get_template('View_single.html')
-        self.response.write(template.render(template_values))
+            template_values = {
+                'imgList':imgList,
+                'streamKey': streamKey,
+                'ownerCheck': ownerCheck,
+                'skiptimes': pic_skip,
+                }
+            template = JINJA_ENVIRONMENT.get_template('View_single.html')
+            self.response.write(template.render(template_values))
 
-        view = View()
-        view.stream = streamKey
-        view.put()
+            view = View()
+            view.stream = streamKey
+            view.put()
+        except TypeError:
+            self.redirect('/error?errorType=2')
+        except ProtocolBufferDecodeError:
+            self.redirect('/error?errorType=3')
+
+
 
     def post(self):
         user = users.get_current_user()
@@ -399,6 +407,10 @@ class ErrorPage(webapp2.RequestHandler):
             errorMsg = "Trying to create a new stream which has the same name as an existing stream"
         elif errorType=='1':
             errorMsg = "You didn't select an image."
+        elif errorType=='2':
+            errorMsg = "Sorry, only string is allowed as urlsafe input"
+        elif errorType=='3':
+            errorMsg = "Sorry, the urlsafe string seems to be invalid"
         else:
             errorMsg = "Something went wrong"
 
