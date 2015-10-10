@@ -18,9 +18,9 @@ handlers:
 - url: /fonts
   static_dir: fonts
 
+
 - url: /.*
   script: connexus.app
-
 - url: /.*
   script: trending.app
 

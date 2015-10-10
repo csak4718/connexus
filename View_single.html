@@ -32,6 +32,7 @@
 </style>
 {% endblock %}
 {% block content %}
+<!-- <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js" type="text/javascript"></script> -->
 
 <div class="row">
 {% if imgList %}
@@ -90,7 +91,6 @@
         </div>
       </span>
     </div>
-
   </div>
 
 
@@ -166,7 +166,19 @@
   document.querySelector("#total-progress").style.opacity = "1";
 // And disable the start button
   file.previewElement.querySelector(".start").setAttribute("disabled", "disabled");
+  // FormData.append('imgLocation': loc);
   });
+
+  var loc = "";
+  navigator.geolocation.getCurrentPosition(function (position) {
+        loc = position.coords.latitude.toString() +", "+ position.coords.longitude.toString()
+        $('#addImage input[name=imgLocation]').val(loc);
+  });
+
+  myDropzone.on("sending", function(file, xhr, formData) {
+    formData.append("imgLocation", loc)
+  });
+
 
 // Hide the total progress bar when nothing's uploading anymore
   myDropzone.on("queuecomplete", function(progress) {
@@ -188,4 +200,10 @@
 <br>
 <br>
 <div class="fb-share-button" data-href="http://connexus-fall15.appspot.com/View_single?streamKey={{streamKey.urlsafe()}}" data-width="200" data-type="button"></div>
+<br>
+
+<a href="/geo?streamKey={{streamKey.urlsafe()}}" data-html="true" data-placement="bottom" class="btn btn-primary btn-xs more" rel="popover" data-content="<small>View the stream in geographic map mode.</small>">
+Geo View
+</a>
+
 {% endblock %}

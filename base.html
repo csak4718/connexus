@@ -28,10 +28,18 @@
     </style>
     {% block dropstyle %}{% endblock %}
     <!-- dropstyle is used in file multi-file upload -->
+    {% block head_content %}{% endblock %}
 </head>
 
 
 <body>
+    <!-- <script src="/js/lightbox.js"></script> -->
+    <!-- <script> -->
+      <!-- // lightbox.option({ -->
+        <!-- // 'wrapAround': true, -->
+        <!-- // 'alwaysShowNavOnTouchDevices': true -->
+      <!-- // }) -->
+    <!-- // </script> -->
     <div id="header"></div>
     <nav class="navbar navbar-default navbar-fixed-top">
         <div class="container">
@@ -95,14 +103,6 @@
         </div>
       </div>
     </footer>
-
-    <script src="/js/lightbox.js"></script>
-    <script>
-        lightbox.option({
-          'wrapAround': true,
-          'alwaysShowNavOnTouchDevices': true
-        })
-    </script>
 </body>
 
 </html>
