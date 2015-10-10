@@ -7,6 +7,7 @@ from google.appengine.ext import ndb
 from google.appengine.api import images
 from google.appengine.api import mail
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
+
 import jinja2
 import webapp2
 import json
@@ -22,7 +23,7 @@ from trending import *
 class Stream(ndb.Model):
     ownerEmail = ndb.StringProperty()
     name = ndb.StringProperty()
-    inviteMsg = ndb.StringProperty(indexed = False)
+    inviteMsg = ndb.StringProperty(indexed=False)
     coverUrl = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
 
@@ -30,8 +31,8 @@ class Image(ndb.Model):
     time = ndb.DateTimeProperty(auto_now_add=True)
     stream = ndb.KeyProperty(kind=Stream)
     full_size_image = ndb.BlobProperty()
+    Thumbnail = ndb.BlobProperty()
     geoPt = ndb.GeoPtProperty()
-
 class Subscriber(ndb.Model):
     stream = ndb.KeyProperty(kind=Stream)
     email = ndb.StringProperty()
@@ -378,7 +379,8 @@ class AddImage(webapp2.RequestHandler):
                 img = Image()
                 img.stream = streamKey
                 img_temp = self.request.get('img')
-                img.full_size_image = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+                img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+                img.full_size_image = img_temp
                 img.geoPt = ndb.GeoPt(imgLocation)
                 img.put()
 
@@ -389,11 +391,11 @@ class AddImage(webapp2.RequestHandler):
                 img = Image()
                 img.stream = streamKey
                 img_temp = self.request.get('img')
-                img.full_size_image = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+                img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+                img.full_size_image = img_temp
                 img.put()
 
                 self.redirect('/View_single?streamKey='+streamKey.urlsafe())
-
         else:
             self.redirect('/error?errorType=1')
 
@@ -425,6 +427,28 @@ class ImageHandler(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'image/png'
         self.response.out.write(img.full_size_image)
 
+class ImageHandler_Thumb(webapp2.RequestHandler):
+    def get(self):
+        ImageKey = ndb.Key(urlsafe=self.request.get('img_id'))
+        img = ImageKey.get()
+        self.response.headers['Content-Type'] = 'image/png'
+        self.response.out.write(img.Thumbnail)
+
+class SearchList(webapp2.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+        term = self.request.get('term')
+        result = dict()
+        if len(term) > 0:
+            candidate = ListofIndex.query().order(-ListofIndex.time).fetch()
+            for index in candidate:
+                if term.lower() in index.index.lower():
+                    result[index.index] = index.index
+                else:
+                    pass
+            self.response.write(json.dumps(result))
+        else:
+            self.response.write(json.dumps(result))
 class MarkerImageHandler(webapp2.RequestHandler):
     def get(self):
         ImageKey = ndb.Key(urlsafe=self.request.get('img_id'))
@@ -590,6 +614,7 @@ app = webapp2.WSGIApplication([
     ('/deleteStream', DeleteStream),
     ('/Add_Image', AddImage),
     ('/img', ImageHandler),
+    ('/img_thumb', ImageHandler_Thumb),
     ('/markerImg', MarkerImageHandler),
     ('/search', Search),
     ('/crontask', CronTask),
@@ -597,6 +622,8 @@ app = webapp2.WSGIApplication([
     ('/updatehour',UpdateHour),
     ('/updateday', UpdateDay),
     ('/trending', Trending),
+    ('/updatelistauto', UpdateListAuto),
+    ('/searchlist', SearchList),
     ('/error', ErrorPage),
     ('/geo_data', Geo_Data),
     ('/geo', Geo),

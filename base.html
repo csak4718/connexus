@@ -4,31 +4,41 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="/css/jquery-ui.css" rel="stylesheet">
+    <script src="/js/jquery.js"></script>
+    <script src="/js/jquery-ui.js"></script>
+    <script src="/js/dropzone.js"></script>
+
+    <link href="/css/lightbox.css" rel="stylesheet">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <!-- Bootstrap -->
     <link type="text/css" href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/sticky-footer.css" rel="stylesheet">
     <title>{% block title %}{% endblock %}-Page</title>
+    <style>
+    .ui-autocomplete {
+      z-index:1050;
+      max-height: 500px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      width:500px;
+    }
+    </style>
+    {% block dropstyle %}{% endblock %}
+    <!-- dropstyle is used in file multi-file upload -->
     {% block head_content %}{% endblock %}
 </head>
 
 
 <body>
+    <script src="/js/lightbox.js"></script>
     <script>
-      window.fbAsyncInit = function() {
-        FB.init({
-          appId      : '540079769478716',
-          xfbml      : true,
-          version    : 'v2.4'
-        });
-      };
-
-      (function(d, s, id){
-         var js, fjs = d.getElementsByTagName(s)[0];
-         if (d.getElementById(id)) {return;}
-         js = d.createElement(s); js.id = id;
-         js.src = "//connect.facebook.net/en_US/sdk.js";
-         fjs.parentNode.insertBefore(js, fjs);
-       }(document, 'script', 'facebook-jssdk'));
+      lightbox.option({
+        'wrapAround': true,
+        'alwaysShowNavOnTouchDevices': true
+      })
     </script>
     <div id="header"></div>
     <nav class="navbar navbar-default navbar-fixed-top">
@@ -41,31 +51,58 @@
                     <li><a href="/manage">Manage</a></li>
                     <li><a href="/create">Create</a></li>
                     <li><a href="/View_all">View</a></li>
-                    <li><a href="/search">Search</a></li>
+                    <!-- <li><a href="/search">Search</a></li> -->
                     <li><a href="/trending">Trending</a></li>
                 </ul>
+                <form class="navbar-form navbar-right" action="/search" method="post">
+                  <div class= "col-xs-12">
+                    <div class="input-group">
+                      <input type="text" id="query" value="" name="target" class="form-control" placeholder="Ex: NBA, #Food" autocomplete="off">
+                      <script>
+                        $(function() {
+                        var cache = {};
+                        $( "#query" ).autocomplete({
+                            source: function( request, response ) {
+                            var term = request.term;
+                            if ( term in cache ) {
+                              response( cache[ term ] );
+                              return;
+                              }
+
+                            $.getJSON( "/searchlist?", request, function( data, status, xhr ) {
+                              cache[ term ] = data;
+                              response( data );
+                            });
+                          }
+                        })
+                      });
+                      </script>
+                      <span class="input-group-btn">
+                        <button id="search_auto" type="submit" class="btn btn-primary" value="">Search</button>
+                      </span>
+                    </div><!-- /input-group -->
+                  </div>
+                </form>
             </div><!--/.nav-collapse -->
         </div>
         <div class="push"></div>
     </nav>
-
     <div id="content">
-        <div class="jumbotron">
-            <div class="container">{% block content %}{% endblock %}</div>
-        </div>
+      <div class="container" style="margin-top: 80px">{% block content %}{% endblock %}</div>
     </div>
 
     <div class="push"></div>
     </div>
-    <div id="footer">
-        &copy; Copyright 2015 by DWDL </a>.
-    </div>
-
-    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>-->
-    <!--<script src="../../dist/js/bootstrap.min.js"></script>-->
-    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-    <!--<script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>-->
-
+    <footer class="footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-10">
+            <p class="text-muted"> &copy; Copyright 2015 by DWDL.</p>
+          </div>
+          <div class="fb-share-button" data-href="http://connexus-fall15.appspot.com/" data-width="200" data-type="button"></div>
+        </div>
+      </div>
+    </footer>
 </body>
 
 </html>

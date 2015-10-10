@@ -16,12 +16,6 @@ indexes:
   - name: time
     direction: desc
 
-- kind: Image
-  properties:
-  - name: stream.name
-  - name: time
-    direction: desc
-
 - kind: Stream
   properties:
   - name: name
