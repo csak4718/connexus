@@ -581,8 +581,9 @@ class Geo_Data(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         markers = []
         for img in imgList:
-            content = '<img src="/markerImg?img_id=' + img.key.urlsafe() + '" alt="image">'
-            markers.append({'latitude': img.geoPt.lat, 'longitude': img.geoPt.lon, 'content': content})
+            if img.geoPt is not None:
+                content = '<img src="/markerImg?img_id=' + img.key.urlsafe() + '" alt="image">'
+                markers.append({'latitude': img.geoPt.lat, 'longitude': img.geoPt.lon, 'content': content})
 
         data = {
             'markers': markers,
