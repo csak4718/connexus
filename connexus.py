@@ -150,63 +150,66 @@ class CreatePage(webapp2.RequestHandler):
         user = users.get_current_user()
         if user:
             name = self.request.get('name')
-            streamList = Stream.query(Stream.name==name).fetch()
-            if len(streamList) != 0:
-                self.redirect('/error?errorType=0')
+            if len(name) == 0:
+                self.redirect('/error?errorType=4')
             else:
-                inviteMsg = self.request.get('msg')
-                coverUrl = self.request.get('cover_url')
-                tagsString = self.request.get('tags')
-                subscribersString = self.request.get('subscribers')
-                print "subscribersString"
-                print subscribersString
-                print "len(subscribersString)"
-                print len(subscribersString)
-                if subscribersString==None:
-                    print "subscribersString == None"
-                elif subscribersString=="":
-                    print "subscribersString is an empty string"
+                streamList = Stream.query(Stream.name==name).fetch()
+                if len(streamList) != 0:
+                    self.redirect('/error?errorType=0')
                 else:
-                    print "non"
+                    inviteMsg = self.request.get('msg')
+                    coverUrl = self.request.get('cover_url')
+                    tagsString = self.request.get('tags')
+                    subscribersString = self.request.get('subscribers')
+                    print "subscribersString"
+                    print subscribersString
+                    print "len(subscribersString)"
+                    print len(subscribersString)
+                    if subscribersString is None:
+                        print "subscribersString is None"
+                    elif subscribersString=="":
+                        print "subscribersString is an empty string"
+                    else:
+                        print "non"
 
 
-                ownerEmail = user.email()
+                    ownerEmail = user.email()
 
-                stream = Stream()
-                stream.ownerEmail = ownerEmail
-                stream.name = name
-                stream.inviteMsg = inviteMsg
-                stream.coverUrl = coverUrl
-                stream.put()
+                    stream = Stream()
+                    stream.ownerEmail = ownerEmail
+                    stream.name = name
+                    stream.inviteMsg = inviteMsg
+                    stream.coverUrl = coverUrl
+                    stream.put()
 
-                if tagsString != "":
-                    tagsList = tagsString.split(', ')
-                    for item in tagsList:
-                        tag = Tag()
-                        tag.name = item
-                        tag.stream = stream.key
-                        tag.put()
+                    if tagsString != "":
+                        tagsList = tagsString.split(', ')
+                        for item in tagsList:
+                            tag = Tag()
+                            tag.name = item
+                            tag.stream = stream.key
+                            tag.put()
 
-                if subscribersString != "":
-                    subscribersList = subscribersString.split(', ')
-                    for item in subscribersList:
-                        subscriber = Subscriber()
-                        subscriber.email = item
-                        subscriber.stream = stream.key
-                        subscriber.put()
-                        if len(item) > 1:
-                            if inviteMsg != "":
-                                mail.send_mail(sender = user.email(),
-                                                to = item,
-                                                subject = "You are invited to a New Stream!",
-                                                body = "You are invited to stream "+name+ ". The following is the message from the Creator:\n" + inviteMsg)
-                            else:
-                                mail.send_mail(sender = user.email(),
-                                                to = item,
-                                                subject = "You are invited to a New Stream!",
-                                                body = "You are invited to stream "+name+ "." )
+                    if subscribersString != "":
+                        subscribersList = subscribersString.split(', ')
+                        for item in subscribersList:
+                            subscriber = Subscriber()
+                            subscriber.email = item
+                            subscriber.stream = stream.key
+                            subscriber.put()
+                            if len(item) > 1:
+                                if inviteMsg != "":
+                                    mail.send_mail(sender = user.email(),
+                                                    to = item,
+                                                    subject = "You are invited to a New Stream!",
+                                                    body = "You are invited to stream "+name+ ". The following is the message from the Creator:\n" + inviteMsg)
+                                else:
+                                    mail.send_mail(sender = user.email(),
+                                                    to = item,
+                                                    subject = "You are invited to a New Stream!",
+                                                    body = "You are invited to stream "+name+ "." )
 
-                self.redirect('/manage')
+                    self.redirect('/manage')
 
 class ViewAllPage(webapp2.RequestHandler):
     def get(self):
@@ -411,6 +414,8 @@ class ErrorPage(webapp2.RequestHandler):
             errorMsg = "Sorry, only string is allowed as urlsafe input"
         elif errorType=='3':
             errorMsg = "Sorry, the urlsafe string seems to be invalid"
+        elif errorType=='4':
+            errorMsg = "Stream's name cannot be empty"
         else:
             errorMsg = "Something went wrong"
 
