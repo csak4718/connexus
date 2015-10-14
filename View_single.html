@@ -49,9 +49,6 @@
     </div>
   </div>
   {% endfor %}
-  <form action="/View_single?streamKey={{streamKey.urlsafe()}}" method="post">
-    <button id="search_btn" type="submit" class="btn btn-primary" value="{{skiptimes}}" name="skiptimes">MorePictrues</button>
-  </form>
 {% else %}
   <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
@@ -67,8 +64,9 @@
   <!-- </form> -->
   <div id="actions" class="row">
 
-    <div class="col-lg-7">
+    <div class="col-xs-12">
     <!-- The fileinput-button span is used to style the file input field as button -->
+    <form action="/View_single?streamKey={{streamKey.urlsafe()}}" method="post">
       <span class="btn btn-success fileinput-button">
         <i class="glyphicon glyphicon-plus"></i>
         <span>Add files...</span>
@@ -79,23 +77,28 @@
       </button>
       <button type="reset" class="btn btn-warning cancel">
         <i class="glyphicon glyphicon-ban-circle"></i>
-        <span>Cancel upload</span>
+        <span>Clear Upload Queue</span>
       </button>
+      <button id="search_btn" type="submit" class="btn btn-primary" value="{{skiptimes}}" name="skiptimes">More Pictrues</button>
+      <div class="pull-right">
+        <a href="/geo?streamKey={{streamKey.urlsafe()}}" data-html="true" data-placement="bottom" class="btn btn-primary btn-xs more" rel="popover" data-content="<small>View the stream in geographic map mode.</small>">
+          Geo View
+        </a>
     </div>
-
-    <div class="col-lg-5">
-    <!-- The global file processing state -->
-      <span class="fileupload-process">
-        <div id="total-progress" class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-          <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
-        </div>
-      </span>
+      </form>
     </div>
   </div>
+  <div class="col-xs-12">
+  <!-- The global file processing state -->
+    <span class="fileupload-process">
+      <div id="total-progress" class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+      </div>
+    </span>
+  </div>
 
-
-  <div class="table table-striped" class="files" id="previews">
-    <div id="template" class="file-row">
+  <div class="row" class="files" id="previews">
+    <div id="template" class="file-row col-xs-4">
       <!-- This is used as the file preview template -->
       <div>
         <span class="preview"><img data-dz-thumbnail /></span>
@@ -121,8 +124,10 @@
         </button>
         <button data-dz-remove class="btn btn-danger delete">
           <i class="glyphicon glyphicon-trash"></i>
-          <span>Delete</span>
+          <span>Clear! Click Me!</span>
         </button>
+        <div class="row" style="margin-top: 20px">
+        </div>
       </div>
     </div>
   </div>
@@ -166,7 +171,6 @@
   document.querySelector("#total-progress").style.opacity = "1";
 // And disable the start button
   file.previewElement.querySelector(".start").setAttribute("disabled", "disabled");
-  // FormData.append('imgLocation': loc);
   });
 
   var loc = "";
@@ -201,9 +205,5 @@
 <br>
 <div class="fb-share-button" data-href="http://connexus-fall15.appspot.com/View_single?streamKey={{streamKey.urlsafe()}}" data-width="200" data-type="button"></div>
 <br>
-
-<a href="/geo?streamKey={{streamKey.urlsafe()}}" data-html="true" data-placement="bottom" class="btn btn-primary btn-xs more" rel="popover" data-content="<small>View the stream in geographic map mode.</small>">
-Geo View
-</a>
 
 {% endblock %}
