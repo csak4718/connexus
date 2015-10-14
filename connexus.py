@@ -611,6 +611,76 @@ class Geo(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('geo.html')
         self.response.write(template.render(template_values))
 
+class CreateFromExtension(webapp2.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if user:
+            template = JINJA_ENVIRONMENT.get_template('CreateFromExtension.html')
+            self.response.write(template.render({}))
+
+    def post(self):
+        self.redirect('/error?errorType=0')
+        user = users.get_current_user()
+        if user:
+            name = self.request.get('name')
+            if len(name) == 0:
+                self.redirect('/error?errorType=4')
+            else:
+                streamList = Stream.query(Stream.name==name).fetch()
+                if len(streamList) != 0:
+                    self.redirect('/error?errorType=0')
+                else:
+                    inviteMsg = self.request.get('msg')
+                    coverUrl = self.request.get('cover_url')
+                    tagsString = self.request.get('tags')
+                    subscribersString = self.request.get('subscribers')
+
+                    subscribe_your_own_stream = False
+                    for item in subscribersString.split(', '):
+                        if item == user.email():
+                            subscribe_your_own_stream = True
+
+                    if subscribe_your_own_stream:
+                        self.redirect('/error?errorType=5')
+                    else:
+                        ownerEmail = user.email()
+
+                        stream = Stream()
+                        stream.ownerEmail = ownerEmail
+                        stream.name = name
+                        stream.inviteMsg = inviteMsg
+                        stream.coverUrl = coverUrl
+                        stream.put()
+
+                        if tagsString != "":
+                            tagsList = tagsString.split(', ')
+                            for item in tagsList:
+                                tag = Tag()
+                                tag.name = item
+                                tag.stream = stream.key
+                                tag.put()
+
+                        if subscribersString != "":
+                            subscribersList = subscribersString.split(', ')
+
+                            for item in subscribersList:
+                                subscriber = Subscriber()
+                                subscriber.email = item
+                                subscriber.stream = stream.key
+                                subscriber.put()
+                                if len(item) > 1:
+                                    if inviteMsg != "":
+                                        mail.send_mail(sender = user.email(),
+                                                        to = item,
+                                                        subject = "You are invited to a New Stream!",
+                                                        body = "You are invited to stream "+name+ ". The following is the message from the Creator:\n" + inviteMsg)
+                                    else:
+                                        mail.send_mail(sender = user.email(),
+                                                        to = item,
+                                                        subject = "You are invited to a New Stream!",
+                                                        body = "You are invited to stream "+name+ "." )
+
+                        self.redirect('/manage')
 
 
 
@@ -619,6 +689,7 @@ app = webapp2.WSGIApplication([
     ('/manage', ManagePage),
     ('/create', CreatePage),
     ('/View_all', ViewAllPage),
+    ('/CreateFromExtension', CreateFromExtension),
     ('/View_single', ViewSinglePage),
     ('/subscribe', Subscribe),
     ('/unsubscribe', Unsubscribe),
