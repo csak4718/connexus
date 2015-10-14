@@ -390,33 +390,30 @@ class Subscribe(webapp2.RequestHandler):
 
 class AddImage(webapp2.RequestHandler):
     def post(self):
-        if self.request.get('img') != "":
-            imgLocation = self.request.get('imgLocation')
-            if imgLocation != "":
-                streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-                img = Image()
-                img.stream = streamKey
-                img_temp = self.request.get('img')
-                img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-                img.full_size_image = img_temp
-                img.geoPt = ndb.GeoPt(imgLocation)
-                img.put()
+        imgLocation = self.request.get('imgLocation')
+        if imgLocation != "":
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            img = Image()
+            img.stream = streamKey
+            img_temp = self.request.get('img')
+            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            img.full_size_image = img_temp
+            img.geoPt = ndb.GeoPt(imgLocation)
+            img.put()
 
-                self.redirect('/View_single?streamKey='+streamKey.urlsafe())
-            else:
-                # user chose not to share his geo location
-                streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-                img = Image()
-                img.stream = streamKey
-                img_temp = self.request.get('img')
-                img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-                img.full_size_image = img_temp
-                img.put()
-
-                self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
         else:
-            #TODO
-            self.redirect('/error?errorType=1')
+            # user chose not to share his geo location
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            img = Image()
+            img.stream = streamKey
+            img_temp = self.request.get('img')
+            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            img.full_size_image = img_temp
+            img.put()
+
+            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+        
 
 
 class ErrorPage(webapp2.RequestHandler):

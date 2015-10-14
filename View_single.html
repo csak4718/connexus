@@ -197,6 +197,12 @@
 // The "add files" button doesn't need to be setup because the config
 // `clickable` has already been specified.
   document.querySelector("#actions .start").onclick = function() {
+    if (myDropzone.getFilesWithStatus(Dropzone.ADDED).length > 0){
+        toastr.success("Upload successfully");
+    }
+    else{
+        toastr.error("You didn't select an image.");
+    }
     myDropzone.enqueueFiles(myDropzone.getFilesWithStatus(Dropzone.ADDED));
   };
   document.querySelector("#actions .cancel").onclick = function() {
