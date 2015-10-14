@@ -152,6 +152,20 @@ class CheckSameStreamName(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(isSame)
 
+class CheckSubscribeOwnStream(webapp2.RequestHandler):
+    def post(self):
+        user = users.get_current_user()
+        subscribersString = self.request.get('subscribers')
+
+        subscribe_your_own_stream = 'no'
+        for item in subscribersString.split(', '):
+            if item == user.email():
+                subscribe_your_own_stream = 'yes'
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.write(subscribe_your_own_stream)
+
+
 class CreatePage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
@@ -159,68 +173,52 @@ class CreatePage(webapp2.RequestHandler):
             template = JINJA_ENVIRONMENT.get_template('Create.html')
             self.response.write(template.render({}))
     def post(self):
-        self.redirect('/error?errorType=0')
         user = users.get_current_user()
         if user:
             name = self.request.get('name')
-            if len(name) == 0:
-                self.redirect('/error?errorType=4')
-            else:
-                streamList = Stream.query(Stream.name==name).fetch()
-                if len(streamList) != 0:
-                    self.redirect('/error?errorType=0')
-                else:
-                    inviteMsg = self.request.get('msg')
-                    coverUrl = self.request.get('cover_url')
-                    tagsString = self.request.get('tags')
-                    subscribersString = self.request.get('subscribers')
+            inviteMsg = self.request.get('msg')
+            coverUrl = self.request.get('cover_url')
+            tagsString = self.request.get('tags')
+            subscribersString = self.request.get('subscribers')
 
-                    subscribe_your_own_stream = False
-                    for item in subscribersString.split(', '):
-                        if item == user.email():
-                            subscribe_your_own_stream = True
+            ownerEmail = user.email()
 
-                    if subscribe_your_own_stream:
-                        self.redirect('/error?errorType=5')
-                    else:
-                        ownerEmail = user.email()
+            stream = Stream()
+            stream.ownerEmail = ownerEmail
+            stream.name = name
+            stream.inviteMsg = inviteMsg
+            stream.coverUrl = coverUrl
+            stream.put()
 
-                        stream = Stream()
-                        stream.ownerEmail = ownerEmail
-                        stream.name = name
-                        stream.inviteMsg = inviteMsg
-                        stream.coverUrl = coverUrl
-                        stream.put()
+            if tagsString != "":
+                tagsList = tagsString.split(', ')
+                for item in tagsList:
+                    tag = Tag()
+                    tag.name = item
+                    tag.stream = stream.key
+                    tag.put()
 
-                        if tagsString != "":
-                            tagsList = tagsString.split(', ')
-                            for item in tagsList:
-                                tag = Tag()
-                                tag.name = item
-                                tag.stream = stream.key
-                                tag.put()
+            if subscribersString != "":
+                subscribersList = subscribersString.split(', ')
 
-                        if subscribersString != "":
-                            subscribersList = subscribersString.split(', ')
+                for item in subscribersList:
+                    subscriber = Subscriber()
+                    subscriber.email = item
+                    subscriber.stream = stream.key
+                    subscriber.put()
+                    if len(item) > 1:
+                        if inviteMsg != "":
+                            mail.send_mail(sender = user.email(),
+                                            to = item,
+                                            subject = "You are invited to a New Stream!",
+                                            body = "You are invited to stream "+name+ ". The following is the message from the Creator:\n" + inviteMsg)
+                        else:
+                            mail.send_mail(sender = user.email(),
+                                            to = item,
+                                            subject = "You are invited to a New Stream!",
+                                            body = "You are invited to stream "+name+ "." )
 
-                            for item in subscribersList:
-                                subscriber = Subscriber()
-                                subscriber.email = item
-                                subscriber.stream = stream.key
-                                subscriber.put()
-                                if len(item) > 1:
-                                    if inviteMsg != "":
-                                        mail.send_mail(sender = user.email(),
-                                                        to = item,
-                                                        subject = "You are invited to a New Stream!",
-                                                        body = "You are invited to stream "+name+ ". The following is the message from the Creator:\n" + inviteMsg)
-                                    else:
-                                        mail.send_mail(sender = user.email(),
-                                                        to = item,
-                                                        subject = "You are invited to a New Stream!",
-                                                        body = "You are invited to stream "+name+ "." )
-
-                        self.redirect('/manage')
+            self.redirect('/manage')
 
 
 class ViewAllPage(webapp2.RequestHandler):
@@ -700,4 +698,5 @@ app = webapp2.WSGIApplication([
     ('/geo_data', Geo_Data),
     ('/geo', Geo),
     ('/checkSameStreamName', CheckSameStreamName),
+    ('/checkSubscribeOwnStream', CheckSubscribeOwnStream),
 ], debug=True)
