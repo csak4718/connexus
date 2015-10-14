@@ -1,11 +1,38 @@
 {% extends "base.html" %}
 {% block title %}Create{% endblock %}
+
+
 {% block content %}
-<div id="alert"></div>
+
+<script>
+function validateForm() {
+    var mName = $('#stream_name').val();
+    var mMsg = $('#stream_msg').val();
+    var mCover_url = $('#stream_url').val();
+    var mTags = $('#stream_tags').val();
+    var mSubscribers = $('#stream_subscribers').val();
+
+
+    if (mName === ''){
+        toastr.error('Stream name cannot be empty');
+        return false;
+    }
+
+    return true;
+
+}
+
+
+
+
+
+</script>
+
+<!--<div id="alert"></div>-->
 <div class="panel panel-default">
     <div class="panel-heading">Create a Connexus Stream</div>
     <div class="panel-body">
-        <form action="/create" method="post">
+        <form id="createForm" action="/create" method="post" onsubmit="return validateForm()">
             <div class="form-group col-md-6">
                 <input type="text" id="stream_name" name="name" class="form-control" placeholder="My Little Pony">
 
