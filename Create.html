@@ -12,36 +12,54 @@ function validateForm() {
     var mTags = $('#stream_tags').val();
     var mSubscribers = $('#stream_subscribers').val();
 
-    var x;
+    var check;
 
     if (mName === ''){
         toastr.error('Stream name cannot be empty');
         return false;
     }
-    else{
-        var y = "stream_name="+mName;
 
-        $.ajax({
-          type: 'POST',
-          url: 'checkSameStreamName',
-          data: y,
-          success: function(msg){
-            if (msg === 'yes'){
-              toastr.error('Trying to create a new stream which has the same name as an existing stream');
-              x = 'yes'
-            }
-          },
-          async: false
-        });
 
-        if (x==='yes'){
-          return false;
+    $.ajax({
+      type: 'POST',
+      url: 'checkSameStreamName',
+      data: "stream_name="+mName,
+      success: function(msg){
+        if (msg === 'yes'){
+          toastr.error('Trying to create a new stream which has the same name as an existing stream');
+          check = 'yes'
         }
+        else{
+          check = 'no'
+        }
+      },
+      async: false
+    });
+    if (check==='yes'){
+      return false;
+    }
 
+
+    $.ajax({
+      type: 'POST',
+      url: 'checkSubscribeOwnStream',
+      data: "subscribers="+mSubscribers,
+      success: function(msg){
+        if (msg === 'yes'){
+          toastr.error('You cannot subscribe your own stream');
+          check = 'yes'
+        }
+        else{
+          check = 'no'
+        }
+      },
+      async: false
+    });
+    if (check==='yes'){
+      return false;
     }
 
     return true;
-
 }
 
 </script>
