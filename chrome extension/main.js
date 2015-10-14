@@ -1,10 +1,10 @@
-searchUrbanDict = function(word){
-  var query = word.selectionText;
-  chrome.tabs.create({url: "http://localhost:9080/CreateFromExtension"});
+Addimage = function(info){
+  var ImageURL = info.srcUrl;
+  chrome.tabs.create({url: "http://localhost:9080/CreateFromExtension?term="+ImageURL});
 };
 
 chrome.contextMenus.create({
-  title: "Search in UrbanDictionary",
-  contexts:["selection"],
-  onclick: searchUrbanDict
+  title: "Add Image to Stream!",
+  contexts:["image"],
+  onclick: Addimage
 });

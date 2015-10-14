@@ -1,5 +1,6 @@
 import os
 import urllib
+import urllib2
 
 
 from google.appengine.api import users
@@ -625,73 +626,50 @@ class Geo(webapp2.RequestHandler):
 class CreateFromExtension(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
+        ImageUrl = self.request.get('term')
+
+        template_values = {
+            'ImgUrl': ImageUrl,
+        }
         if user:
             template = JINJA_ENVIRONMENT.get_template('CreateFromExtension.html')
-            self.response.write(template.render({}))
+            self.response.write(template.render(template_values))
 
     def post(self):
-        self.redirect('/error?errorType=0')
         user = users.get_current_user()
+        ImageUrl = self.request.get('TheURL')
+        webimg = urllib2.urlopen(ImageUrl).read()
+        imgLocation = ""
         if user:
             name = self.request.get('name')
             if len(name) == 0:
                 self.redirect('/error?errorType=4')
+            elif Stream.query(Stream.name==name).count() == 0:
+                self.redirect('/error?errorType=1')
             else:
                 streamList = Stream.query(Stream.name==name).fetch()
-                if len(streamList) != 0:
-                    self.redirect('/error?errorType=0')
-                else:
-                    inviteMsg = self.request.get('msg')
-                    coverUrl = self.request.get('cover_url')
-                    tagsString = self.request.get('tags')
-                    subscribersString = self.request.get('subscribers')
+                # imgLocation = self.request.get('imgLocation')
+                for stream in streamList:
+                    if imgLocation != "":
+                        img = Image()
+                        img.stream = stream.key
+                        img_temp = webimg
+                        img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+                        img.full_size_image = img_temp
+                        img.geoPt = ndb.GeoPt(imgLocation)
+                        img.put()
 
-                    subscribe_your_own_stream = False
-                    for item in subscribersString.split(', '):
-                        if item == user.email():
-                            subscribe_your_own_stream = True
-
-                    if subscribe_your_own_stream:
-                        self.redirect('/error?errorType=5')
+                        self.redirect('/View_single?streamKey='+stream.key.urlsafe())
                     else:
-                        ownerEmail = user.email()
+                        # user chose not to share his geo location
+                        img = Image()
+                        img.stream = stream.key
+                        img_temp = webimg
+                        img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+                        img.full_size_image = img_temp
+                        img.put()
 
-                        stream = Stream()
-                        stream.ownerEmail = ownerEmail
-                        stream.name = name
-                        stream.inviteMsg = inviteMsg
-                        stream.coverUrl = coverUrl
-                        stream.put()
-
-                        if tagsString != "":
-                            tagsList = tagsString.split(', ')
-                            for item in tagsList:
-                                tag = Tag()
-                                tag.name = item
-                                tag.stream = stream.key
-                                tag.put()
-
-                        if subscribersString != "":
-                            subscribersList = subscribersString.split(', ')
-
-                            for item in subscribersList:
-                                subscriber = Subscriber()
-                                subscriber.email = item
-                                subscriber.stream = stream.key
-                                subscriber.put()
-                                if len(item) > 1:
-                                    if inviteMsg != "":
-                                        mail.send_mail(sender = user.email(),
-                                                        to = item,
-                                                        subject = "You are invited to a New Stream!",
-                                                        body = "You are invited to stream "+name+ ". The following is the message from the Creator:\n" + inviteMsg)
-                                    else:
-                                        mail.send_mail(sender = user.email(),
-                                                        to = item,
-                                                        subject = "You are invited to a New Stream!",
-                                                        body = "You are invited to stream "+name+ "." )
-
-                        self.redirect('/manage')
+                        self.redirect('/View_single?streamKey='+stream.key.urlsafe())
 
 
 
