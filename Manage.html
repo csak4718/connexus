@@ -8,32 +8,36 @@
     <div class="panel-heading">Streams I Own</div>
         <div class="panel-body">
             {% if my_grouped_list %}
-                <div class="col-md-2">Name</div>
-                <div class="col-md-4">Last New Picture</div>
-                <div class="col-md-2">Number of Pictures</div>
-                <div class="col-md-2">Views</div>
-                <div class="col-md-2">Delete</div>
+            <div class="row">
+                <div class="col-xs-2">Name</div>
+                <div class="col-xs-4">Last New Picture</div>
+                <div class="col-xs-2">Number of Pictures</div>
+                <div class="col-xs-2">Views</div>
+                <div class="col-xs-2">Delete</div>
+            </div>
 
                 <form action="/deleteStream" method="post">
                 {% for myStream, numViews, upadatetime, numPics in my_grouped_list %}
-                    <div class="col-md-2">
+                <div class="row">
+                    <div class="col-xs-2">
                         <a href="/View_single?streamKey={{myStream.key.urlsafe()}}">
                         {{ myStream.name }}
                         </a>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-xs-4">
                         {{ upadatetime }}
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xs-2">
                         {{ numPics }}
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xs-2">
                         {{ numViews }}
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xs-2">
                         <input name="{{myStream.name}}" type="checkbox">
                     </div>
                     <br>
+                </div>
                 {% endfor %}
 
                 <input type="submit" value="Delete selected streams">
@@ -50,29 +54,29 @@
         <div class="panel-heading">Streams I Subscribe to</div>
         <div class="panel-body">
             {% if sub_grouped_list %}
-                <div class="col-md-2">Name</div>
-                <div class="col-md-4">Last New Picture</div>
-                <div class="col-md-2">Number of Pictures</div>
-                <div class="col-md-2">Views</div>
-                <div class="col-md-2">Unsubscribe</div>
+                <div class="col-xs-2">Name</div>
+                <div class="col-xs-4">Last New Picture</div>
+                <div class="col-xs-2">Number of Pictures</div>
+                <div class="col-xs-2">Views</div>
+                <div class="col-xs-2">Unsubscribe</div>
 
                 <form action="/unsubscribe" method="post">
                 {% for subscribeStream, numViews, upadatetime, numPics in sub_grouped_list %}
-                    <div class="col-md-2">
+                    <div class="col-xs-2">
                         <a href="/View_single?streamKey={{subscribeStream.urlsafe()}}">
                         {{ subscribeStream.get().name }}
                         </a>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-xs-4">
                         {{ upadatetime }}
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xs-2">
                         {{ numPics }}
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xs-2">
                         {{ numViews }}
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xs-2">
                         <input name="{{subscribeStream.get().name}}" type="checkbox">
                     </div>
                     <br>

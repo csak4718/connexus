@@ -147,6 +147,7 @@ class CreatePage(webapp2.RequestHandler):
             template = JINJA_ENVIRONMENT.get_template('Create.html')
             self.response.write(template.render({}))
     def post(self):
+        self.redirect('/error?errorType=0')
         user = users.get_current_user()
         if user:
             name = self.request.get('name')
@@ -449,7 +450,10 @@ class SearchList(webapp2.RequestHandler):
             candidate = ListofIndex.query().order(-ListofIndex.time).fetch()
             for index in candidate:
                 if term.lower() in index.index.lower():
-                    result[index.index] = index.index
+                    if len(result) >= 20:
+                        pass
+                    else:
+                        result[index.index] = index.index
                 else:
                     pass
             self.response.write(json.dumps(result))
