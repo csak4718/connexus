@@ -12,10 +12,32 @@ function validateForm() {
     var mTags = $('#stream_tags').val();
     var mSubscribers = $('#stream_subscribers').val();
 
+    var x;
 
     if (mName === ''){
         toastr.error('Stream name cannot be empty');
         return false;
+    }
+    else{
+        var y = "stream_name="+mName;
+
+        $.ajax({
+          type: 'POST',
+          url: 'checkSameStreamName',
+          data: y,
+          success: function(msg){
+            if (msg === 'yes'){
+              toastr.error('Trying to create a new stream which has the same name as an existing stream');
+              x = 'yes'
+            }
+          },
+          async: false
+        });
+
+        if (x==='yes'){
+          return false;
+        }
+
     }
 
     return true;

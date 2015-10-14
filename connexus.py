@@ -139,6 +139,17 @@ class DeleteStream(webapp2.RequestHandler):
                         viewstobeDelete.key.delete()
             self.redirect('/manage')
 
+class CheckSameStreamName(webapp2.RequestHandler):
+    def post(self):
+        name = self.request.get('stream_name')
+        streamList = Stream.query(Stream.name==name).fetch()
+        if len(streamList) != 0:
+            isSame = 'yes'
+        else:
+            isSame = 'no'
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.write(isSame)
 
 class CreatePage(webapp2.RequestHandler):
     def get(self):
@@ -709,4 +720,5 @@ app = webapp2.WSGIApplication([
     ('/error', ErrorPage),
     ('/geo_data', Geo_Data),
     ('/geo', Geo),
+    ('/checkSameStreamName', CheckSameStreamName),
 ], debug=True)
