@@ -1,12 +1,12 @@
 {
   "manifest_version": 2,
-  "name": "UrbanDictionary Search",
-  "short_name": "Search",
-  "description": "Searches for the selected text in the UrbanDictionary",
+  "name": "Add Image to Connexus!",
+  "short_name": "AIC",
+  "description": "Add your favorite image to Connexus.com!",
   "version": "0.0.1",
   "minimum_chrome_version": "38",
   "permissions": [
-    "contextMenus", 
+    "contextMenus",
     "tabs"],
   "icons": {
     "16": "assets/search.png"
