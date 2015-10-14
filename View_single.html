@@ -139,6 +139,7 @@
 </div>
 
 <script type="text/javascript">
+  var loc = "";
   var previewNode = document.querySelector("#template");
   previewNode.id="";
   var previewTemplate = previewNode.parentNode.innerHTML;
@@ -156,9 +157,14 @@
     clickable: ".fileinput-button" // Define the element that should be used as click trigger to select files.
   });
 
-  myDropzone.on("addedfile", function(file) {
-// Hookup the start button
-  file.previewElement.querySelector(".start").onclick = function() { myDropzone.enqueueFile(file); };
+  myDropzone.on("addedfile", function(file) {  
+    navigator.geolocation.getCurrentPosition(function (position) {
+          loc = position.coords.latitude.toString() +", "+ position.coords.longitude.toString()
+          $('#addImage input[name=imgLocation]').val(loc);
+    });
+
+    // Hookup the start button
+      file.previewElement.querySelector(".start").onclick = function() { myDropzone.enqueueFile(file); };
   });
 
 // Update the total progress bar
@@ -173,11 +179,7 @@
   file.previewElement.querySelector(".start").setAttribute("disabled", "disabled");
   });
 
-  var loc = "";
-  navigator.geolocation.getCurrentPosition(function (position) {
-        loc = position.coords.latitude.toString() +", "+ position.coords.longitude.toString()
-        $('#addImage input[name=imgLocation]').val(loc);
-  });
+
 
   myDropzone.on("sending", function(file, xhr, formData) {
     formData.append("imgLocation", loc)
