@@ -415,6 +415,7 @@ class AddImage(webapp2.RequestHandler):
 
                 self.redirect('/View_single?streamKey='+streamKey.urlsafe())
         else:
+            #TODO
             self.redirect('/error?errorType=1')
 
 
