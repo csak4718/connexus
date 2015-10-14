@@ -1,24 +1,69 @@
 {% extends "base.html" %}
 {% block title %}Manage{% endblock %}
 {% block content %}
-<div id="alert">
-</div>
+<script>
+function validateForm(){
+    var mData = {};
+    var hasRemain = false;
+    {% for myStream in myStreamList %}
+      if ($("input[name={{myStream.name}}]").prop( "checked" )===true){
+          mData["{{myStream.name}}"] = 'on'
+          $("#delete_{{myStream.name}}").hide();
+      }
+      else{
+          mData["{{myStream.name}}"] = 'off'
+          hasRemain = true;
+      }
+    {% endfor %}
+
+    if (hasRemain===false){
+        $("#ownNotEmpty").hide();
+        $("#ownEmpty").show();
+    }
+
+    {% for myStream in myStreamList %}
+    // console.log("{{myStream.name}}");
+        if ($("input[name={{myStream.name}}]").prop( "checked" )===true){
+
+          console.log("have selected");
+          $.ajax({
+            type: 'POST',
+            url: 'deleteStream',
+            data: mData,
+            success: function(msg){
+              if (msg === 'success'){
+                toastr.success('successfully delete');
+              }
+
+
+            }
+          });
+
+
+          return false;
+        }
+    {% endfor %}
+    toastr.error("You didn't select a stream to delete")
+    return false;
+}
+</script>
 
 <div class="panel panel-default">
     <div class="panel-heading">Streams I Own</div>
         <div class="panel-body">
             {% if my_grouped_list %}
-            <div class="row">
-                <div class="col-xs-2">Name</div>
-                <div class="col-xs-4">Last New Picture</div>
-                <div class="col-xs-2">Number of Pictures</div>
-                <div class="col-xs-2">Views</div>
-                <div class="col-xs-2">Delete</div>
-            </div>
-
-                <form action="/deleteStream" method="post">
-                {% for myStream, numViews, upadatetime, numPics in my_grouped_list %}
+            <div id="ownNotEmpty">
                 <div class="row">
+                    <div class="col-xs-2">Name</div>
+                    <div class="col-xs-4">Last New Picture</div>
+                    <div class="col-xs-2">Number of Pictures</div>
+                    <div class="col-xs-2">Views</div>
+                    <div class="col-xs-2">Delete</div>
+                </div>
+
+                <form action="/deleteStream" method="post" onsubmit="return validateForm()">
+                {% for myStream, numViews, upadatetime, numPics in my_grouped_list %}
+                <div id="delete_{{myStream.name}}" class="row">
                     <div class="col-xs-2">
                         <a href="/View_single?streamKey={{myStream.key.urlsafe()}}">
                         {{ myStream.name }}
@@ -42,11 +87,20 @@
 
                 <input type="submit" value="Delete selected streams">
                 </form>
-            {% else %}
+            </div>
+            <div id="ownEmpty" style="display:none">
                 You do not have any streams yet. Create some now!
                 <button type="submit" onclick="location.href = '/create'">
                     Create Stream
                 </button>
+            </div>
+            {% else %}
+
+            You do not have any streams yet. Create some now!
+            <button type="submit" onclick="location.href = '/create'">
+                Create Stream
+            </button>
+
             {% endif %}
         </div>
       </div>
@@ -81,6 +135,7 @@
                     </div>
                     <br>
                 {% endfor %}
+
                 <input type="submit" value="Unsubscribe selected streams">
                 </form>
             {% else %}

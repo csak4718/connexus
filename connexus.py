@@ -121,6 +121,7 @@ class ManagePage(webapp2.RequestHandler):
             template_values = {
                 'my_grouped_list': my_grouped_list,
                 'sub_grouped_list': sub_grouped_list,
+                'myStreamList': myStreamList,
             }
             template = JINJA_ENVIRONMENT.get_template('Manage.html')
             self.response.write(template.render(template_values))
@@ -131,14 +132,19 @@ class DeleteStream(webapp2.RequestHandler):
         user = users.get_current_user()
         if user:
             myStreamList = Stream.query(Stream.ownerEmail == user.email()).fetch()
+            print "XXXXXXXXXXXXXXXXXXX"
+            print myStreamList
             for myStream in myStreamList:
                 check = self.request.get(myStream.name)
+                print "CHECK"
+                print check
                 if check=='on':
                     myStream.key.delete()
                     View_list = View.query(View.stream == myStream.key)
                     for viewstobeDelete in View_list:
                         viewstobeDelete.key.delete()
-            self.redirect('/manage')
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.write('success')
 
 class CheckSameStreamName(webapp2.RequestHandler):
     def post(self):
