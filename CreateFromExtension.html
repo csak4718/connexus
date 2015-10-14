@@ -94,10 +94,13 @@
                     <div class="col-xs-12">
                         <div class="map-surrounding">
                             <div id="map_canvas" class="map" style="width:600px;height:400px"></div>
+                            <p id="markerLocation"><p>
                         </div>
                         <br>
                     </div>
                     <div class="form-group col-xs-12">
+                        <input id="lat" name="lat" type="hidden"></input>
+                        <input id="lng" name="lng" type="hidden"></input>
                         <button type="submit" id="submit_btn" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> Submit</button>
                     </div>
                 </form>
@@ -105,6 +108,40 @@
         </div>
       </div>
     </div>
+    <script type="text/javascript">
+          var my_marker;
+          $('#map_canvas').gmap({'zoom': 2, 'disableDefaultUI':true}).bind('init', function(event, map) {
+          	$(map).click( function(event) {
+              if (!my_marker){
+                $('#map_canvas').gmap('addMarker', {
+            			'position': event.latLng,
+            			'draggable': true,
+            			'bounds': false
+            		}, function(map, marker) {
+                  my_marker = marker;
+            			$('#markerLocation').text(marker.getPosition());
+                  $('#lat').val(marker.getPosition().lat);
+                  $('#lng').val(marker.getPosition().lng);
+            		});
+              }
+              else{
+                $('#map_canvas').gmap('clear', 'markers');
+                $('#map_canvas').gmap('addMarker', {
+            			'position': event.latLng,
+            			'draggable': true,
+            			'bounds': false
+            		}, function(map, marker) {
+                  my_marker = marker;
+            			$('#markerLocation').text(marker.getPosition());
+                  $('#lat').val(marker.getPosition().lat);
+                  $('#lng').val(marker.getPosition().lng);
+            		});
+              }
+
+          	});
+          });
+    </script>
+
 </body>
 
 </html>

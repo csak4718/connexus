@@ -639,7 +639,9 @@ class CreateFromExtension(webapp2.RequestHandler):
         user = users.get_current_user()
         ImageUrl = self.request.get('TheURL')
         webimg = urllib2.urlopen(ImageUrl).read()
-        imgLocation = ""
+        lat = self.request.get('lat')
+        lng = self.request.get('lng')
+        imgLocation = lat+", "+lng
         if user:
             name = self.request.get('name')
             if len(name) == 0:
@@ -648,7 +650,6 @@ class CreateFromExtension(webapp2.RequestHandler):
                 self.redirect('/error?errorType=1')
             else:
                 streamList = Stream.query(Stream.name==name).fetch()
-                # imgLocation = self.request.get('imgLocation')
                 for stream in streamList:
                     if imgLocation != "":
                         img = Image()
