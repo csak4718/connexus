@@ -64,9 +64,8 @@
   <!-- </form> -->
   <div id="actions" class="row">
 
-    <div class="col-xs-12">
+    <div class="col-xs-5">
     <!-- The fileinput-button span is used to style the file input field as button -->
-    <form action="/View_single?streamKey={{streamKey.urlsafe()}}" method="post">
       <span class="btn btn-success fileinput-button">
         <i class="glyphicon glyphicon-plus"></i>
         <span>Add files...</span>
@@ -79,12 +78,15 @@
         <i class="glyphicon glyphicon-ban-circle"></i>
         <span>Clear Upload Queue</span>
       </button>
-      <button id="search_btn" type="submit" class="btn btn-primary" value="{{skiptimes}}" name="skiptimes">More Pictrues</button>
-      <div class="pull-right">
-        <a href="/geo?streamKey={{streamKey.urlsafe()}}" data-html="true" data-placement="bottom" class="btn btn-primary btn-xs more" rel="popover" data-content="<small>View the stream in geographic map mode.</small>">
-          Geo View
-        </a>
     </div>
+    <div class="col-xs-7">
+      <form action="/View_single?streamKey={{streamKey.urlsafe()}}" method="post">
+        <div class="pull-right">
+          <button id="search_btn" type="submit" class="btn btn-primary" value="{{skiptimes}}" name="skiptimes">More Pictrues</button>
+          <a href="/geo?streamKey={{streamKey.urlsafe()}}" data-html="true" data-placement="bottom" class="btn btn-primary btn-xs more" rel="popover" data-content="<small>View the stream in geographic map mode.</small>">
+            Geo View
+          </a>
+        </div>
       </form>
     </div>
   </div>
