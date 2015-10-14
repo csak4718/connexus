@@ -122,22 +122,30 @@ class ManagePage(webapp2.RequestHandler):
                 'my_grouped_list': my_grouped_list,
                 'sub_grouped_list': sub_grouped_list,
                 'myStreamList': myStreamList,
+                'subscribeStreamList': subscribeStreamList,
             }
             template = JINJA_ENVIRONMENT.get_template('Manage.html')
             self.response.write(template.render(template_values))
 
+class Unsubscribe(webapp2.RequestHandler):
+    def post(self):
+        user = users.get_current_user()
+        if user:
+            lst = Subscriber().query(Subscriber.email == user.email()).fetch()
+            for subscriber in lst:
+                check = self.request.get(subscriber.stream.get().name)
+                if check and check=='on':
+                    subscriber.key.delete()
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.write('success')
 
 class DeleteStream(webapp2.RequestHandler):
     def post(self):
         user = users.get_current_user()
         if user:
             myStreamList = Stream.query(Stream.ownerEmail == user.email()).fetch()
-            print "XXXXXXXXXXXXXXXXXXX"
-            print myStreamList
             for myStream in myStreamList:
                 check = self.request.get(myStream.name)
-                print "CHECK"
-                print check
                 if check=='on':
                     myStream.key.delete()
                     View_list = View.query(View.stream == myStream.key)
@@ -378,16 +386,7 @@ class Subscribe(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('View_single.html')
         self.response.write(template.render(template_values))
 
-class Unsubscribe(webapp2.RequestHandler):
-    def post(self):
-        user = users.get_current_user()
-        if user:
-            lst = Subscriber().query(Subscriber.email == user.email()).fetch()
-            for subscriber in lst:
-                stream_name = self.request.get(subscriber.stream.get().name)
-                if stream_name and stream_name=='on':
-                    subscriber.key.delete()
-            self.redirect('/manage')
+
 
 class AddImage(webapp2.RequestHandler):
     def post(self):
