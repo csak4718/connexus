@@ -25,10 +25,23 @@
       position: relative;
       width:500px;
     }
+    .piccontain{
+      height: 300px;
+      position: relative
+    }
+    .row img {
+        position: relative;
+        height: 300px;
+        max-width: 500px;
+        max-height: 300px;
+    }
     </style>
     <!-- dropstyle is used in file multi-file upload -->
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
     <link rel="stylesheet" href="css/toastr.css">
+
+
+
 </head>
 
 <body>
@@ -104,16 +117,16 @@
             <div class="panel-body">
                 <form id="createForm" action="/CreateFromExtension" method="post" onsubmit="return validateForm()">
                     <div class='row'>
-                      <img src='{{ImgUrl}}' alt="image" width="300">
+                      <img src='{{ImgUrl}}' alt="image" >
                     </div>
                     <input type='hidden' name='TheURL' value='{{ImgUrl}}'>
                     <div class="form-group col-xs-6">
                       <div class="input-group">
-                        <input type="text" id="stream_name" value="" name="name" class="form-control" placeholder="Stream to Add" autocomplete="off">
+                        <input type="text" id="stream_name" name="name" class="form-control" placeholder="Stream to Add" autocomplete="off">
                         <script>
                           $(function() {
                           var cache = {};
-                          $( "#streamname" ).autocomplete({
+                          $( "#stream_name" ).autocomplete({
                               source: function( request, response ) {
                               var term = request.term;
                               if ( term in cache ) {
@@ -121,7 +134,7 @@
                                 return;
                                 }
 
-                              $.getJSON( "/searchlist?", request, function( data, status, xhr ) {
+                              $.getJSON( "/searchlistofname?", request, function( data, status, xhr ) {
                                 cache[ term ] = data;
                                 response( data );
                               });
