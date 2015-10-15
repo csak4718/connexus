@@ -75,6 +75,26 @@
         return false;
       }
 
+
+      $.ajax({
+        type: 'POST',
+        url: 'checkIsOwner',
+        data: "stream_name="+mName,
+        success: function(isOwner){
+          if (isOwner === 'no'){
+            toastr.error('You cannot upload image to other\'s stream');
+            check = 'no'
+          }
+          else{
+            check = 'yes'
+          }
+        },
+        async: false
+      });
+      if (check==='no'){
+        return false;
+      }
+
       return true;
     }
 
