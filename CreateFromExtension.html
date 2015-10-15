@@ -102,11 +102,11 @@
                     <input type='hidden' name='TheURL' value='{{ImgUrl}}'>
                     <div class="form-group col-xs-6">
                       <div class="input-group">
-                        <input type="text" id="stream_name" value="" name="name" class="form-control" placeholder="Stream to Add" autocomplete="off">
+                        <input type="text" id="stream_name" name="name" class="form-control" placeholder="Stream to Add" autocomplete="off">
                         <script>
                           $(function() {
                           var cache = {};
-                          $( "#streamname" ).autocomplete({
+                          $( "#stream_name" ).autocomplete({
                               source: function( request, response ) {
                               var term = request.term;
                               if ( term in cache ) {
@@ -114,7 +114,7 @@
                                 return;
                                 }
 
-                              $.getJSON( "/searchlist?", request, function( data, status, xhr ) {
+                              $.getJSON( "/searchlistofname?", request, function( data, status, xhr ) {
                                 cache[ term ] = data;
                                 response( data );
                               });
