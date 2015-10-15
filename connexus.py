@@ -648,31 +648,42 @@ class CreateFromExtension(webapp2.RequestHandler):
 
         if user:
             name = self.request.get('name')
-            if Stream.query(Stream.name==name).count() == 0:
-                self.redirect('/error?errorType=1')
+
+            streamList = Stream.query(Stream.name==name).fetch()
+            for stream in streamList:
+                if imgLocation != ", ":
+                    img = Image()
+                    img.stream = stream.key
+                    img_temp = webimg
+                    img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+                    img.full_size_image = img_temp
+                    img.geoPt = ndb.GeoPt(imgLocation)
+                    img.put()
+
+                    self.redirect('/View_single?streamKey='+stream.key.urlsafe())
+                else:
+                    # user chose not to share his geo location
+                    img = Image()
+                    img.stream = stream.key
+                    img_temp = webimg
+                    img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+                    img.full_size_image = img_temp
+                    img.put()
+
+                    self.redirect('/View_single?streamKey='+stream.key.urlsafe())
+
+class CheckIsOwner(webapp2.RequestHandler):
+    def post(self):
+        user = users.get_current_user()
+        name = self.request.get('stream_name')
+        streamList = Stream.query(Stream.name==name).fetch()
+        if len(streamList)==1:
+            if streamList[0].ownerEmail==user.email():
+                isOwner = 'yes'
             else:
-                streamList = Stream.query(Stream.name==name).fetch()
-                for stream in streamList:
-                    if imgLocation != ", ":
-                        img = Image()
-                        img.stream = stream.key
-                        img_temp = webimg
-                        img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-                        img.full_size_image = img_temp
-                        img.geoPt = ndb.GeoPt(imgLocation)
-                        img.put()
-
-                        self.redirect('/View_single?streamKey='+stream.key.urlsafe())
-                    else:
-                        # user chose not to share his geo location
-                        img = Image()
-                        img.stream = stream.key
-                        img_temp = webimg
-                        img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-                        img.full_size_image = img_temp
-                        img.put()
-
-                        self.redirect('/View_single?streamKey='+stream.key.urlsafe())
+                isOwner = 'no'
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.write(isOwner)
 
 class CheckStreamExist(webapp2.RequestHandler):
     def post(self):
@@ -714,4 +725,5 @@ app = webapp2.WSGIApplication([
     ('/checkSameStreamName', CheckSameStreamName),
     ('/checkSubscribeOwnStream', CheckSubscribeOwnStream),
     ('/checkStreamExist', CheckStreamExist),
+    ('/checkIsOwner', CheckIsOwner),
 ], debug=True)
