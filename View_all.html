@@ -1,14 +1,34 @@
 {% extends "base.html" %}
 {% block title %}View_all{% endblock %}
+{% block imagesize%}
+<style>
+.piccontain{
+  height: 300px;
+  position: relative
+}
+.thumbnail img {
+    position: center;
+    vertical-align:middle;
+    max-height: 300px;
+}
+</style>
+{% endblock %}
 {% block content %}
+
 
 <div class="row">
   {% for Stream in Streams %}
-  <div class="col-sm-6 col-md-4">
+  <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
     <div class="thumbnail">
-      <a href="/View_single?streamKey={{Stream.key.urlsafe()}}">
-        <img  class="img-responsive" src="{{Stream.coverUrl}}" alt="{{Stream.name}}">
-      </a>
+      <div class='piccontain'>
+        <a href="/View_single?streamKey={{Stream.key.urlsafe()}}">
+          {% if Stream.coverUrl %}
+            <img class="img-responsive center-block" src="{{Stream.coverUrl}}" alt="{{Stream.name}}">
+          {% else %}
+            <img class="img-responsive" src="assets/NoCoverAvailable.jpg" alt="No Cover">
+          {% endif %}
+        </a>
+      </div>
       <div class="caption">
         <h3>{{Stream.name}}</h3>
         <p>Created by {{Stream.ownerEmail}}</p>

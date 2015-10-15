@@ -59,9 +59,6 @@
 </div>
 <div class="row">
   {% if ownerCheck|string() == 'isOwner' %}
-  <!-- <form id='multiupload' action="/Add_Image?streamKey={{streamKey.urlsafe()}}" enctype="multipart/form-data" method="post" class="dropzone"> -->
-    <!-- <input class="btn btn-default" type="submit" value="Add Image"> -->
-  <!-- </form> -->
   <div id="actions" class="row">
 
     <div class="col-xs-5">
@@ -134,9 +131,23 @@
     </div>
   </div>
   {% else %}
-  <form action="/subscribe?streamKey={{streamKey.urlsafe()}}" enctype="multipart/form-data" method="post">
-    <input class="btn btn-default" type="submit" value="Subscribe">
-  </form>
+  <div class="row">
+    <div class="col-xs-6">
+      <form action="/subscribe?streamKey={{streamKey.urlsafe()}}" enctype="multipart/form-data" method="post">
+        <input class="btn btn-default" type="submit" value="Subscribe">
+      </form>
+    </div>
+    <div class="col-xs-6">
+      <form action="/View_single?streamKey={{streamKey.urlsafe()}}" method="post">
+        <div class="pull-right">
+          <button id="search_btn" type="submit" class="btn btn-primary" value="{{skiptimes}}" name="skiptimes">More Pictrues</button>
+          <a href="/geo?streamKey={{streamKey.urlsafe()}}" data-html="true" data-placement="bottom" class="btn btn-primary btn-xs more" rel="popover" data-content="<small>View the stream in geographic map mode.</small>">
+            Geo View
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
   {% endif %}
 </div>
 
