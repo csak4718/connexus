@@ -1,6 +1,6 @@
 Addimage = function(info){
   var ImageURL = info.srcUrl;
-  chrome.tabs.create({url: "http://localhost:9080/CreateFromExtension?term="+ImageURL});
+  chrome.tabs.create({url: "http://connexus-fall15.appspot.com/CreateFromExtension?term="+ImageURL});
 };
 
 chrome.contextMenus.create({
