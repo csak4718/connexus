@@ -45,6 +45,40 @@
 </head>
 
 <body>
+    <script>
+    function validateForm() {
+      var mName = $('#stream_name').val();
+
+      var check;
+
+      if (mName === ''){
+          toastr.error('Stream name cannot be empty');
+          return false;
+        }
+
+      $.ajax({
+        type: 'POST',
+        url: 'checkStreamExist',
+        data: "stream_name="+mName,
+        success: function(isExist){
+          if (isExist === 'no'){
+            toastr.error('The stream you specify does not exist');
+            check = 'no'
+          }
+          else{
+            check = 'yes'
+          }
+        },
+        async: false
+      });
+      if (check==='no'){
+        return false;
+      }
+
+      return true;
+    }
+
+    </script>
 
     <script type="text/javascript" src="js/toastr.js"></script>
 
@@ -54,34 +88,21 @@
     <script type="text/javascript" src="js/jquery.ui.map.js"></script>
     <script type="text/javascript" src="js/jquery-ui.min.js"></script>
 
-    <script>
-    function validateForm() {
-      var mName = $('#stream_name').val();
 
-      if (mName === ''){
-          toastr.error('Stream name cannot be empty');
-          return false;
-        }
-
-      return true;
-
-    }
-
-    </script>
 
     <div id="content">
       <div class="container" style="margin-top: 80px">
         <div class="panel panel-default">
             <div class="panel-heading">Add a Image to a Stream</div>
             <div class="panel-body">
-                <form id="createForm" action="/CreateFromExtension" method="post">
+                <form id="createForm" action="/CreateFromExtension" method="post" onsubmit="return validateForm()">
                     <div class='row'>
                       <img src='{{ImgUrl}}' alt="image" >
                     </div>
                     <input type='hidden' name='TheURL' value='{{ImgUrl}}'>
                     <div class="form-group col-xs-6">
                       <div class="input-group">
-                        <input type="text" id="streamname" value="" name="name" class="form-control" placeholder="Stream to Add" autocomplete="off">
+                        <input type="text" id="stream_name" value="" name="name" class="form-control" placeholder="Stream to Add" autocomplete="off">
                         <script>
                           $(function() {
                           var cache = {};

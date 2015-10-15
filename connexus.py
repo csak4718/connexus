@@ -390,33 +390,30 @@ class Subscribe(webapp2.RequestHandler):
 
 class AddImage(webapp2.RequestHandler):
     def post(self):
-        if self.request.get('img') != "":
-            imgLocation = self.request.get('imgLocation')
-            if imgLocation != "":
-                streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-                img = Image()
-                img.stream = streamKey
-                img_temp = self.request.get('img')
-                img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-                img.full_size_image = img_temp
-                img.geoPt = ndb.GeoPt(imgLocation)
-                img.put()
+        imgLocation = self.request.get('imgLocation')
+        if imgLocation != "":
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            img = Image()
+            img.stream = streamKey
+            img_temp = self.request.get('img')
+            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            img.full_size_image = img_temp
+            img.geoPt = ndb.GeoPt(imgLocation)
+            img.put()
 
-                self.redirect('/View_single?streamKey='+streamKey.urlsafe())
-            else:
-                # user chose not to share his geo location
-                streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-                img = Image()
-                img.stream = streamKey
-                img_temp = self.request.get('img')
-                img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-                img.full_size_image = img_temp
-                img.put()
-
-                self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
         else:
-            #TODO
-            self.redirect('/error?errorType=1')
+            # user chose not to share his geo location
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            img = Image()
+            img.stream = streamKey
+            img_temp = self.request.get('img')
+            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            img.full_size_image = img_temp
+            img.put()
+
+            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+
 
 
 class ErrorPage(webapp2.RequestHandler):
@@ -646,16 +643,17 @@ class CreateFromExtension(webapp2.RequestHandler):
         lat = self.request.get('lat')
         lng = self.request.get('lng')
         imgLocation = lat+", "+lng
+        print "imgLocation"
+        print imgLocation
+
         if user:
             name = self.request.get('name')
-            if len(name) == 0:
-                self.redirect('/error?errorType=4')
-            elif Stream.query(Stream.name==name).count() == 0:
+            if Stream.query(Stream.name==name).count() == 0:
                 self.redirect('/error?errorType=1')
             else:
                 streamList = Stream.query(Stream.name==name).fetch()
                 for stream in streamList:
-                    if imgLocation != "":
+                    if imgLocation != ", ":
                         img = Image()
                         img.stream = stream.key
                         img_temp = webimg
@@ -676,7 +674,17 @@ class CreateFromExtension(webapp2.RequestHandler):
 
                         self.redirect('/View_single?streamKey='+stream.key.urlsafe())
 
+class CheckStreamExist(webapp2.RequestHandler):
+    def post(self):
+        name = self.request.get('stream_name')
+        streamList = Stream.query(Stream.name==name).fetch()
+        if len(streamList) == 0:
+            isExist = 'no'
+        else:
+            isExist = 'yes'
 
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.write(isExist)
 
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
@@ -705,4 +713,5 @@ app = webapp2.WSGIApplication([
     ('/geo', Geo),
     ('/checkSameStreamName', CheckSameStreamName),
     ('/checkSubscribeOwnStream', CheckSubscribeOwnStream),
+    ('/checkStreamExist', CheckStreamExist),
 ], debug=True)
