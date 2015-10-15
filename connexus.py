@@ -413,7 +413,7 @@ class AddImage(webapp2.RequestHandler):
             img.put()
 
             self.redirect('/View_single?streamKey='+streamKey.urlsafe())
-        
+
 
 
 class ErrorPage(webapp2.RequestHandler):
@@ -643,16 +643,17 @@ class CreateFromExtension(webapp2.RequestHandler):
         lat = self.request.get('lat')
         lng = self.request.get('lng')
         imgLocation = lat+", "+lng
+        print "imgLocation"
+        print imgLocation
+
         if user:
             name = self.request.get('name')
-            if len(name) == 0:
-                self.redirect('/error?errorType=4')
-            elif Stream.query(Stream.name==name).count() == 0:
+            if Stream.query(Stream.name==name).count() == 0:
                 self.redirect('/error?errorType=1')
             else:
                 streamList = Stream.query(Stream.name==name).fetch()
                 for stream in streamList:
-                    if imgLocation != "":
+                    if imgLocation != ", ":
                         img = Image()
                         img.stream = stream.key
                         img_temp = webimg
@@ -673,7 +674,17 @@ class CreateFromExtension(webapp2.RequestHandler):
 
                         self.redirect('/View_single?streamKey='+stream.key.urlsafe())
 
+class CheckStreamExist(webapp2.RequestHandler):
+    def post(self):
+        name = self.request.get('stream_name')
+        streamList = Stream.query(Stream.name==name).fetch()
+        if len(streamList) == 0:
+            isExist = 'no'
+        else:
+            isExist = 'yes'
 
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.write(isExist)
 
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
@@ -702,4 +713,5 @@ app = webapp2.WSGIApplication([
     ('/geo', Geo),
     ('/checkSameStreamName', CheckSameStreamName),
     ('/checkSubscribeOwnStream', CheckSubscribeOwnStream),
+    ('/checkStreamExist', CheckStreamExist),
 ], debug=True)
