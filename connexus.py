@@ -27,6 +27,7 @@ class Stream(ndb.Model):
     inviteMsg = ndb.StringProperty(indexed=False)
     coverUrl = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
+    lastTimeUpload = ndb.DateTimeProperty()
 
 class Image(ndb.Model):
     time = ndb.DateTimeProperty(auto_now_add=True)
@@ -34,6 +35,7 @@ class Image(ndb.Model):
     full_size_image = ndb.BlobProperty()
     Thumbnail = ndb.BlobProperty()
     geoPt = ndb.GeoPtProperty()
+
 class Subscriber(ndb.Model):
     stream = ndb.KeyProperty(kind=Stream)
     email = ndb.StringProperty()
@@ -400,6 +402,11 @@ class AddImage(webapp2.RequestHandler):
             img.full_size_image = img_temp
             img.geoPt = ndb.GeoPt(imgLocation)
             img.put()
+            print "IMG.TIME = "
+            print img.time
+            stream = streamKey.get()
+            stream.lastTimeUpload = img.time
+            stream.put()
 
             self.redirect('/View_single?streamKey='+streamKey.urlsafe())
         else:
@@ -411,6 +418,11 @@ class AddImage(webapp2.RequestHandler):
             img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
             img.full_size_image = img_temp
             img.put()
+            print "IMG.TIME = "
+            print img.time
+            stream = streamKey.get()
+            stream.lastTimeUpload = img.time
+            stream.put()
 
             self.redirect('/View_single?streamKey='+streamKey.urlsafe())
 
@@ -686,6 +698,9 @@ class CreateFromExtension(webapp2.RequestHandler):
                     img.geoPt = ndb.GeoPt(imgLocation)
                     img.put()
 
+                    stream.lastTimeUpload = img.time
+                    stream.put()
+
                     self.redirect('/View_single?streamKey='+stream.key.urlsafe())
                 else:
                     # user chose not to share his geo location
@@ -695,6 +710,9 @@ class CreateFromExtension(webapp2.RequestHandler):
                     img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
                     img.full_size_image = img_temp
                     img.put()
+
+                    stream.lastTimeUpload = img.time
+                    stream.put()
 
                     self.redirect('/View_single?streamKey='+stream.key.urlsafe())
 
@@ -722,6 +740,56 @@ class CheckStreamExist(webapp2.RequestHandler):
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(isExist)
+
+# reference
+class View_all_photos_mobile(webapp2.RequestHandler):
+    def get(self):
+        imageQuery = Image.query()
+        imageList = []
+        imageURLList = []
+        # imageCaptionList = []
+        for pic in imageQuery:
+            imageList.append(pic)
+
+        imageList = sorted(imageList, key=lambda k: k.time,reverse = True)
+
+        for pic in imageList:
+            picURL = images.get_serving_url(pic.blob_key)
+            imageURLList.append(picURL)
+            # imageCaptionList.append(pic.caption)
+
+        dictPassed = {
+            'displayImages':imageURLList,
+            # 'imageCaptionList':imageCaptionList
+        }
+        jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+        self.response.write(jsonObj)
+
+class View_single_mobile(webapp2.RequestHandler):
+    def get(self):
+        pass
+
+class View_all_streams_mobile(webapp2.RequestHandler):
+    def get(self):
+        # stream_list=Stream.query().order(-Stream.time)
+        # sorted_stream_list= sorted(stream_list, key=lambda k: k.lastTimeUpload, reverse=True)
+        sorted_stream_list = Stream.query().order(-Stream.lastTimeUpload)
+        coverImageUrlList = []
+        for stream in sorted_stream_list:
+            if stream.coverUrl != "":
+                coverImageUrlList.append(stream.coverUrl)
+            else:
+                coverImageUrlList.append("http://www.paganwardistro.com/imagens/distro/NoCoverAvailable.png")
+
+        dictPassed = {
+            'displayStreams': coverImageUrlList,
+        }
+        jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+        self.response.write(jsonObj)
+
+
+# imgList = Image.query(Image.stream == stream.key).order(-Image.time).fetch()
+
 
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
@@ -753,4 +821,6 @@ app = webapp2.WSGIApplication([
     ('/checkSubscribeOwnStream', CheckSubscribeOwnStream),
     ('/checkStreamExist', CheckStreamExist),
     ('/checkIsOwner', CheckIsOwner),
+    ('/View_single_mobile', View_single_mobile),
+    ('/View_all_streams_mobile', View_all_streams_mobile),
 ], debug=True)
