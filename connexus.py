@@ -297,68 +297,6 @@ class Search(webapp2.RequestHandler):
             template = JINJA_ENVIRONMENT.get_template('Search.html')
             self.response.write(template.render())
 
-class ViewSinglePage(webapp2.RequestHandler):
-    def get(self):
-        user = users.get_current_user()
-        # print "STREAM KEY"
-        # print self.request.get('streamKey')
-
-        try:
-            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-            pic_skip = 0
-
-            imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
-            ownerCheck = 'notOwner'
-            if streamKey.get().ownerEmail == user.email():
-                ownerCheck = 'isOwner'
-
-            template_values = {
-                'imgList':imgList,
-                'streamKey': streamKey,
-                'ownerCheck': ownerCheck,
-                'skiptimes': pic_skip,
-                }
-            template = JINJA_ENVIRONMENT.get_template('View_single.html')
-            self.response.write(template.render(template_values))
-
-            view = View()
-            view.stream = streamKey
-            view.put()
-        except TypeError:
-            self.redirect('/error?errorType=2')
-        except ProtocolBufferDecodeError:
-            self.redirect('/error?errorType=3')
-
-
-
-    def post(self):
-        user = users.get_current_user()
-        skiptimes = self.request.get('skiptimes')
-        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-
-        pic_skip = int(skiptimes)+3
-        pic_to_display = pic_skip
-        RemainingImgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
-
-        pic_to_display = pic_to_display + len(RemainingImgList)
-        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(pic_to_display)
-
-        ownerCheck = 'notOwner'
-        if streamKey.get().ownerEmail == user.email():
-            ownerCheck = 'isOwner'
-
-        template_values = {
-            'imgList':imgList,
-            'streamKey': streamKey,
-            'ownerCheck': ownerCheck,
-            'skiptimes': pic_skip,
-            }
-        template = JINJA_ENVIRONMENT.get_template('View_single.html')
-        self.response.write(template.render(template_values))
-
-        view = View()
-        view.stream = streamKey
-        view.put()
 
 class Subscribe(webapp2.RequestHandler):
     def post(self):
@@ -387,45 +325,6 @@ class Subscribe(webapp2.RequestHandler):
         }
         template = JINJA_ENVIRONMENT.get_template('View_single.html')
         self.response.write(template.render(template_values))
-
-
-
-class AddImage(webapp2.RequestHandler):
-    def post(self):
-        imgLocation = self.request.get('imgLocation')
-        if imgLocation != "":
-            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-            img = Image()
-            img.stream = streamKey
-            img_temp = self.request.get('img')
-            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-            img.full_size_image = img_temp
-            img.geoPt = ndb.GeoPt(imgLocation)
-            img.put()
-            print "IMG.TIME = "
-            print img.time
-            stream = streamKey.get()
-            stream.lastTimeUpload = img.time
-            stream.put()
-
-            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
-        else:
-            # user chose not to share his geo location
-            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-            img = Image()
-            img.stream = streamKey
-            img_temp = self.request.get('img')
-            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-            img.full_size_image = img_temp
-            img.put()
-            print "IMG.TIME = "
-            print img.time
-            stream = streamKey.get()
-            stream.lastTimeUpload = img.time
-            stream.put()
-
-            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
-
 
 
 class ErrorPage(webapp2.RequestHandler):
@@ -765,17 +664,98 @@ class View_all_photos_mobile(webapp2.RequestHandler):
         jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
         self.response.write(jsonObj)
 
+class ViewSinglePage(webapp2.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        # print "STREAM KEY"
+        # print self.request.get('streamKey')
+
+        try:
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            pic_skip = 0
+
+            imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
+            ownerCheck = 'notOwner'
+            if streamKey.get().ownerEmail == user.email():
+                ownerCheck = 'isOwner'
+
+            template_values = {
+                'imgList':imgList,
+                'streamKey': streamKey,
+                'ownerCheck': ownerCheck,
+                'skiptimes': pic_skip,
+                }
+            template = JINJA_ENVIRONMENT.get_template('View_single.html')
+            self.response.write(template.render(template_values))
+
+            view = View()
+            view.stream = streamKey
+            view.put()
+        except TypeError:
+            self.redirect('/error?errorType=2')
+        except ProtocolBufferDecodeError:
+            self.redirect('/error?errorType=3')
+
+
+
+    def post(self):
+        user = users.get_current_user()
+        skiptimes = self.request.get('skiptimes')
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+
+        pic_skip = int(skiptimes)+3
+        pic_to_display = pic_skip
+        RemainingImgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
+
+        pic_to_display = pic_to_display + len(RemainingImgList)
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(pic_to_display)
+
+        ownerCheck = 'notOwner'
+        if streamKey.get().ownerEmail == user.email():
+            ownerCheck = 'isOwner'
+
+        template_values = {
+            'imgList':imgList,
+            'streamKey': streamKey,
+            'ownerCheck': ownerCheck,
+            'skiptimes': pic_skip,
+            }
+        template = JINJA_ENVIRONMENT.get_template('View_single.html')
+        self.response.write(template.render(template_values))
+
+        view = View()
+        view.stream = streamKey
+        view.put()
+
+
 class View_single_mobile(webapp2.RequestHandler):
     def get(self):
-        pass
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
+        imageUrlList = []
+        for img in imgList:
+            url = "http://connexus-fall15.appspot.com/img?img_id="+img.key.urlsafe()
+            imageUrlList.append(url)
+
+        dictPassed = {
+            'displayImages': imageUrlList,
+        }
+        jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+        self.response.write(jsonObj)
 
 class View_all_streams_mobile(webapp2.RequestHandler):
     def get(self):
-        # stream_list=Stream.query().order(-Stream.time)
-        # sorted_stream_list= sorted(stream_list, key=lambda k: k.lastTimeUpload, reverse=True)
         sorted_stream_list = Stream.query().order(-Stream.lastTimeUpload)
         coverImageUrlList = []
+        streamKeyList = []
+        streamNameList = []
         for stream in sorted_stream_list:
+            streamKeyList.append(stream.key.urlsafe())
+            streamNameList.append(stream.name)
+            print "StreamName"
+            print stream.name
+            # print "COVER URL"
+            # print stream.coverUrl
             if stream.coverUrl != "":
                 coverImageUrlList.append(stream.coverUrl)
             else:
@@ -783,9 +763,65 @@ class View_all_streams_mobile(webapp2.RequestHandler):
 
         dictPassed = {
             'displayStreams': coverImageUrlList,
+            'streamKeyList': streamKeyList,
+            'streamNameList': streamNameList,
         }
         jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
         self.response.write(jsonObj)
+
+class Add_Image_mobile(webapp2.RequestHandler):
+    def post(self):
+        # TODO: make photoCaption meaningful
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+        img = Image()
+        img.stream = streamKey
+        img_temp = self.request.get('file')
+        img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+        img.full_size_image = img_temp
+        # TODO geo pt
+        # img.geoPt = ndb.GeoPt(imgLocation)
+        img.put()
+
+        stream = streamKey.get()
+        stream.lastTimeUpload = img.time
+        stream.put()
+
+
+class AddImage(webapp2.RequestHandler):
+    def post(self):
+        imgLocation = self.request.get('imgLocation')
+        if imgLocation != "":
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            img = Image()
+            img.stream = streamKey
+            img_temp = self.request.get('img')
+            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            img.full_size_image = img_temp
+            img.geoPt = ndb.GeoPt(imgLocation)
+            img.put()
+            print "IMG.TIME = "
+            print img.time
+            stream = streamKey.get()
+            stream.lastTimeUpload = img.time
+            stream.put()
+
+            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+        else:
+            # user chose not to share his geo location
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            img = Image()
+            img.stream = streamKey
+            img_temp = self.request.get('img')
+            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            img.full_size_image = img_temp
+            img.put()
+            print "IMG.TIME = "
+            print img.time
+            stream = streamKey.get()
+            stream.lastTimeUpload = img.time
+            stream.put()
+
+            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
 
 
 # imgList = Image.query(Image.stream == stream.key).order(-Image.time).fetch()
@@ -823,4 +859,5 @@ app = webapp2.WSGIApplication([
     ('/checkIsOwner', CheckIsOwner),
     ('/View_single_mobile', View_single_mobile),
     ('/View_all_streams_mobile', View_all_streams_mobile),
+    ('/Add_Image_mobile', Add_Image_mobile),
 ], debug=True)
