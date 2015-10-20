@@ -752,8 +752,8 @@ class View_all_streams_mobile(webapp2.RequestHandler):
         for stream in sorted_stream_list:
             streamKeyList.append(stream.key.urlsafe())
             streamNameList.append(stream.name)
-            print "StreamName"
-            print stream.name
+            # print "StreamName"
+            # print stream.name
             # print "COVER URL"
             # print stream.coverUrl
             if stream.coverUrl != "":
@@ -768,6 +768,56 @@ class View_all_streams_mobile(webapp2.RequestHandler):
         }
         jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
         self.response.write(jsonObj)
+
+
+class Search_mobile(webapp2.RequestHandler):
+    def get(self):
+        streamset=set()
+        searchtarget = self.request.get('searchTerm')
+
+        if len(searchtarget) > 0:
+            name_result = Stream.query(searchtarget == Stream.name).order(-Stream.time)
+            tag_result = Tag.query(searchtarget == Tag.name)
+
+            result_list = name_result.fetch()
+
+            for names in name_result:
+                streamKey = names.key
+                if streamKey not in streamset:      #create a set of streams which match the result
+                    streamset.add(streamKey)
+                else:
+                    pass
+
+
+            for tags in tag_result:
+                key_of_stream = tags.stream
+                if key_of_stream in streamset:
+                    pass
+                else:
+                    streamset.add(key_of_stream)
+                    result_list.append(key_of_stream.get())
+
+
+            coverImageUrlList = []
+            streamKeyList = []
+            streamNameList = []
+            for stream in result_list:
+                streamKeyList.append(stream.key.urlsafe())
+                streamNameList.append(stream.name)
+
+                if stream.coverUrl != "":
+                    coverImageUrlList.append(stream.coverUrl)
+                else:
+                    coverImageUrlList.append("http://www.paganwardistro.com/imagens/distro/NoCoverAvailable.png")
+
+            dictPassed = {
+                'displayStreams': coverImageUrlList,
+                'streamKeyList': streamKeyList,
+                'streamNameList': streamNameList,
+            }
+            jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+            self.response.write(jsonObj)
+
 
 class Add_Image_mobile(webapp2.RequestHandler):
     def post(self):
@@ -860,4 +910,5 @@ app = webapp2.WSGIApplication([
     ('/View_single_mobile', View_single_mobile),
     ('/View_all_streams_mobile', View_all_streams_mobile),
     ('/Add_Image_mobile', Add_Image_mobile),
+    ('/Search_mobile', Search_mobile),
 ], debug=True)
