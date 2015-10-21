@@ -8,6 +8,7 @@ from google.appengine.ext import ndb
 from google.appengine.api import images
 from google.appengine.api import mail
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
+from math import radians, cos, sin, asin, sqrt
 
 import jinja2
 import webapp2
@@ -818,6 +819,51 @@ class Search_mobile(webapp2.RequestHandler):
             jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
             self.response.write(jsonObj)
 
+class Search_Nearby_mobile(webapp2.RequestHandler):
+    def get(self):
+        user_lat = float(self.request.get('latitude'))
+        user_lon = float(self.request.get('longitude'))
+        img_list = Image.query().fetch()
+        nearImageList = sorted(img_list, key=lambda k: self.haversine(user_lon, user_lat, k.geoPt.lon, k.geoPt.lat),reverse = True)
+        imageUrlList = []
+        sorted_stream_list = []
+        for img in nearImageList:
+            url = "http://connexus-fall15.appspot.com/img?img_id="+img.key.urlsafe()
+            imageUrlList.append(url)
+            sorted_stream_list.append(img.stream.get())
+
+        streamKeyList = []
+        streamNameList = []
+        for stream in sorted_stream_list:
+            streamKeyList.append(stream.key.urlsafe())
+            streamNameList.append(stream.name)
+
+        dictPassed = {
+            'displayImages': imageUrlList,
+            'streamKeyList': streamKeyList,
+            'streamNameList': streamNameList,
+        }
+
+        jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+        self.response.write(jsonObj)
+
+
+    def haversine(self, lon1, lat1, lon2, lat2):
+        """
+        Calculate the great circle distance between two points
+        on the earth (specified in decimal degrees)
+        """
+        # convert decimal degrees to radians
+        lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * asin(sqrt(a))
+        r = 3956 # Radius of earth in kilometers. Use 3956 for miles. Use 6371 for km.
+        return c * r
+
 
 class Add_Image_mobile(webapp2.RequestHandler):
     def post(self):
@@ -911,4 +957,5 @@ app = webapp2.WSGIApplication([
     ('/View_all_streams_mobile', View_all_streams_mobile),
     ('/Add_Image_mobile', Add_Image_mobile),
     ('/Search_mobile', Search_mobile),
+    ('/Search_Nearby_mobile', Search_Nearby_mobile),
 ], debug=True)
