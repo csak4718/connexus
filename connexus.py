@@ -828,8 +828,8 @@ class Add_Image_mobile(webapp2.RequestHandler):
         img_temp = self.request.get('file')
         img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
         img.full_size_image = img_temp
-        # TODO geo pt
-        # img.geoPt = ndb.GeoPt(imgLocation)
+        imgLocation = self.request.get('imgLocation')
+        img.geoPt = ndb.GeoPt(imgLocation)
         img.put()
 
         stream = streamKey.get()
