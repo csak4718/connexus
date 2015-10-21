@@ -732,6 +732,7 @@ class ViewSinglePage(webapp2.RequestHandler):
 class View_single_mobile(webapp2.RequestHandler):
     def get(self):
         streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+        ownerEmail = streamKey.get().ownerEmail
         imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
         imageUrlList = []
         for img in imgList:
@@ -740,6 +741,7 @@ class View_single_mobile(webapp2.RequestHandler):
 
         dictPassed = {
             'displayImages': imageUrlList,
+            'ownerEmail': ownerEmail,
         }
         jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
         self.response.write(jsonObj)
