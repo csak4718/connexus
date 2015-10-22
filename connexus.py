@@ -728,6 +728,25 @@ class ViewSinglePage(webapp2.RequestHandler):
         view.stream = streamKey
         view.put()
 
+class MySubscribedImages_mobile(webapp2.RequestHandler):
+    def get(self):
+        userEmail = self.request.get("userEmail")
+        lst = Subscriber.query(Subscriber.email == userEmail).fetch()
+        imgList =[]
+        for elem in lst:
+            imgList += Image.query(Image.stream == elem.stream).fetch()
+
+        imgList = sorted(imgList, key=lambda k: k.time, reverse = True)
+        imageUrlList = []
+        for img in imgList:
+            url = "http://connexus-fall15.appspot.com/img?img_id="+img.key.urlsafe()
+            imageUrlList.append(url)
+
+        dictPassed = {
+            'displayImages': imageUrlList,
+        }
+        jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+        self.response.write(jsonObj)
 
 class View_single_mobile(webapp2.RequestHandler):
     def get(self):
@@ -826,6 +845,13 @@ class Search_Nearby_mobile(webapp2.RequestHandler):
         user_lat = float(self.request.get('latitude'))
         user_lon = float(self.request.get('longitude'))
         img_list = Image.query().fetch()
+
+        for img in img_list:
+            print "GEO_PT"
+            print img.geoPt
+            if img.geoPt == "":
+                img_list.remove(img)
+
         nearImageList = sorted(img_list, key=lambda k: self.haversine(user_lon, user_lat, k.geoPt.lon, k.geoPt.lat),reverse = True)
         imageUrlList = []
         sorted_stream_list = []
@@ -960,4 +986,5 @@ app = webapp2.WSGIApplication([
     ('/Add_Image_mobile', Add_Image_mobile),
     ('/Search_mobile', Search_mobile),
     ('/Search_Nearby_mobile', Search_Nearby_mobile),
+    ('/MySubscribedImages_mobile', MySubscribedImages_mobile),
 ], debug=True)
