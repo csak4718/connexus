@@ -8,6 +8,7 @@ from google.appengine.ext import ndb
 from google.appengine.api import images
 from google.appengine.api import mail
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
+from math import radians, cos, sin, asin, sqrt
 
 import jinja2
 import webapp2
@@ -27,6 +28,7 @@ class Stream(ndb.Model):
     inviteMsg = ndb.StringProperty(indexed=False)
     coverUrl = ndb.StringProperty(indexed=False)
     time = ndb.DateTimeProperty(auto_now_add=True)
+    lastTimeUpload = ndb.DateTimeProperty()
 
 class Image(ndb.Model):
     time = ndb.DateTimeProperty(auto_now_add=True)
@@ -34,6 +36,7 @@ class Image(ndb.Model):
     full_size_image = ndb.BlobProperty()
     Thumbnail = ndb.BlobProperty()
     geoPt = ndb.GeoPtProperty()
+
 class Subscriber(ndb.Model):
     stream = ndb.KeyProperty(kind=Stream)
     email = ndb.StringProperty()
@@ -295,68 +298,6 @@ class Search(webapp2.RequestHandler):
             template = JINJA_ENVIRONMENT.get_template('Search.html')
             self.response.write(template.render())
 
-class ViewSinglePage(webapp2.RequestHandler):
-    def get(self):
-        user = users.get_current_user()
-        # print "STREAM KEY"
-        # print self.request.get('streamKey')
-
-        try:
-            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-            pic_skip = 0
-
-            imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
-            ownerCheck = 'notOwner'
-            if streamKey.get().ownerEmail == user.email():
-                ownerCheck = 'isOwner'
-
-            template_values = {
-                'imgList':imgList,
-                'streamKey': streamKey,
-                'ownerCheck': ownerCheck,
-                'skiptimes': pic_skip,
-                }
-            template = JINJA_ENVIRONMENT.get_template('View_single.html')
-            self.response.write(template.render(template_values))
-
-            view = View()
-            view.stream = streamKey
-            view.put()
-        except TypeError:
-            self.redirect('/error?errorType=2')
-        except ProtocolBufferDecodeError:
-            self.redirect('/error?errorType=3')
-
-
-
-    def post(self):
-        user = users.get_current_user()
-        skiptimes = self.request.get('skiptimes')
-        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-
-        pic_skip = int(skiptimes)+3
-        pic_to_display = pic_skip
-        RemainingImgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
-
-        pic_to_display = pic_to_display + len(RemainingImgList)
-        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(pic_to_display)
-
-        ownerCheck = 'notOwner'
-        if streamKey.get().ownerEmail == user.email():
-            ownerCheck = 'isOwner'
-
-        template_values = {
-            'imgList':imgList,
-            'streamKey': streamKey,
-            'ownerCheck': ownerCheck,
-            'skiptimes': pic_skip,
-            }
-        template = JINJA_ENVIRONMENT.get_template('View_single.html')
-        self.response.write(template.render(template_values))
-
-        view = View()
-        view.stream = streamKey
-        view.put()
 
 class Subscribe(webapp2.RequestHandler):
     def post(self):
@@ -385,35 +326,6 @@ class Subscribe(webapp2.RequestHandler):
         }
         template = JINJA_ENVIRONMENT.get_template('View_single.html')
         self.response.write(template.render(template_values))
-
-
-
-class AddImage(webapp2.RequestHandler):
-    def post(self):
-        imgLocation = self.request.get('imgLocation')
-        if imgLocation != "":
-            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-            img = Image()
-            img.stream = streamKey
-            img_temp = self.request.get('img')
-            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-            img.full_size_image = img_temp
-            img.geoPt = ndb.GeoPt(imgLocation)
-            img.put()
-
-            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
-        else:
-            # user chose not to share his geo location
-            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
-            img = Image()
-            img.stream = streamKey
-            img_temp = self.request.get('img')
-            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
-            img.full_size_image = img_temp
-            img.put()
-
-            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
-
 
 
 class ErrorPage(webapp2.RequestHandler):
@@ -686,6 +598,9 @@ class CreateFromExtension(webapp2.RequestHandler):
                     img.geoPt = ndb.GeoPt(imgLocation)
                     img.put()
 
+                    stream.lastTimeUpload = img.time
+                    stream.put()
+
                     self.redirect('/View_single?streamKey='+stream.key.urlsafe())
                 else:
                     # user chose not to share his geo location
@@ -695,6 +610,9 @@ class CreateFromExtension(webapp2.RequestHandler):
                     img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
                     img.full_size_image = img_temp
                     img.put()
+
+                    stream.lastTimeUpload = img.time
+                    stream.put()
 
                     self.redirect('/View_single?streamKey='+stream.key.urlsafe())
 
@@ -722,6 +640,290 @@ class CheckStreamExist(webapp2.RequestHandler):
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(isExist)
+
+# reference
+class View_all_photos_mobile(webapp2.RequestHandler):
+    def get(self):
+        imageQuery = Image.query()
+        imageList = []
+        imageURLList = []
+        # imageCaptionList = []
+        for pic in imageQuery:
+            imageList.append(pic)
+
+        imageList = sorted(imageList, key=lambda k: k.time,reverse = True)
+
+        for pic in imageList:
+            picURL = images.get_serving_url(pic.blob_key)
+            imageURLList.append(picURL)
+            # imageCaptionList.append(pic.caption)
+
+        dictPassed = {
+            'displayImages':imageURLList,
+            # 'imageCaptionList':imageCaptionList
+        }
+        jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+        self.response.write(jsonObj)
+
+class ViewSinglePage(webapp2.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        # print "STREAM KEY"
+        # print self.request.get('streamKey')
+
+        try:
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            pic_skip = 0
+
+            imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
+            ownerCheck = 'notOwner'
+            if streamKey.get().ownerEmail == user.email():
+                ownerCheck = 'isOwner'
+
+            template_values = {
+                'imgList':imgList,
+                'streamKey': streamKey,
+                'ownerCheck': ownerCheck,
+                'skiptimes': pic_skip,
+                }
+            template = JINJA_ENVIRONMENT.get_template('View_single.html')
+            self.response.write(template.render(template_values))
+
+            view = View()
+            view.stream = streamKey
+            view.put()
+        except TypeError:
+            self.redirect('/error?errorType=2')
+        except ProtocolBufferDecodeError:
+            self.redirect('/error?errorType=3')
+
+
+
+    def post(self):
+        user = users.get_current_user()
+        skiptimes = self.request.get('skiptimes')
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+
+        pic_skip = int(skiptimes)+3
+        pic_to_display = pic_skip
+        RemainingImgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(3, offset = pic_skip)
+
+        pic_to_display = pic_to_display + len(RemainingImgList)
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch(pic_to_display)
+
+        ownerCheck = 'notOwner'
+        if streamKey.get().ownerEmail == user.email():
+            ownerCheck = 'isOwner'
+
+        template_values = {
+            'imgList':imgList,
+            'streamKey': streamKey,
+            'ownerCheck': ownerCheck,
+            'skiptimes': pic_skip,
+            }
+        template = JINJA_ENVIRONMENT.get_template('View_single.html')
+        self.response.write(template.render(template_values))
+
+        view = View()
+        view.stream = streamKey
+        view.put()
+
+
+class View_single_mobile(webapp2.RequestHandler):
+    def get(self):
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+        ownerEmail = streamKey.get().ownerEmail
+        imgList = Image.query(Image.stream == streamKey).order(-Image.time).fetch()
+        imageUrlList = []
+        for img in imgList:
+            url = "http://connexus-fall15.appspot.com/img?img_id="+img.key.urlsafe()
+            imageUrlList.append(url)
+
+        dictPassed = {
+            'displayImages': imageUrlList,
+            'ownerEmail': ownerEmail,
+        }
+        jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+        self.response.write(jsonObj)
+
+class View_all_streams_mobile(webapp2.RequestHandler):
+    def get(self):
+        sorted_stream_list = Stream.query().order(-Stream.lastTimeUpload)
+        coverImageUrlList = []
+        streamKeyList = []
+        streamNameList = []
+        for stream in sorted_stream_list:
+            streamKeyList.append(stream.key.urlsafe())
+            streamNameList.append(stream.name)
+            # print "StreamName"
+            # print stream.name
+            # print "COVER URL"
+            # print stream.coverUrl
+            if stream.coverUrl != "":
+                coverImageUrlList.append(stream.coverUrl)
+            else:
+                coverImageUrlList.append("http://www.paganwardistro.com/imagens/distro/NoCoverAvailable.png")
+
+        dictPassed = {
+            'displayStreams': coverImageUrlList,
+            'streamKeyList': streamKeyList,
+            'streamNameList': streamNameList,
+        }
+        jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+        self.response.write(jsonObj)
+
+
+class Search_mobile(webapp2.RequestHandler):
+    def get(self):
+        streamset=set()
+        searchtarget = self.request.get('searchTerm')
+
+        if len(searchtarget) > 0:
+            name_result = Stream.query(searchtarget == Stream.name).order(-Stream.time)
+            tag_result = Tag.query(searchtarget == Tag.name)
+
+            result_list = name_result.fetch()
+
+            for names in name_result:
+                streamKey = names.key
+                if streamKey not in streamset:      #create a set of streams which match the result
+                    streamset.add(streamKey)
+                else:
+                    pass
+
+
+            for tags in tag_result:
+                key_of_stream = tags.stream
+                if key_of_stream in streamset:
+                    pass
+                else:
+                    streamset.add(key_of_stream)
+                    result_list.append(key_of_stream.get())
+
+
+            coverImageUrlList = []
+            streamKeyList = []
+            streamNameList = []
+            for stream in result_list:
+                streamKeyList.append(stream.key.urlsafe())
+                streamNameList.append(stream.name)
+
+                if stream.coverUrl != "":
+                    coverImageUrlList.append(stream.coverUrl)
+                else:
+                    coverImageUrlList.append("http://www.paganwardistro.com/imagens/distro/NoCoverAvailable.png")
+
+            dictPassed = {
+                'displayStreams': coverImageUrlList,
+                'streamKeyList': streamKeyList,
+                'streamNameList': streamNameList,
+            }
+            jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+            self.response.write(jsonObj)
+
+class Search_Nearby_mobile(webapp2.RequestHandler):
+    def get(self):
+        user_lat = float(self.request.get('latitude'))
+        user_lon = float(self.request.get('longitude'))
+        img_list = Image.query().fetch()
+        nearImageList = sorted(img_list, key=lambda k: self.haversine(user_lon, user_lat, k.geoPt.lon, k.geoPt.lat),reverse = True)
+        imageUrlList = []
+        sorted_stream_list = []
+        for img in nearImageList:
+            url = "http://connexus-fall15.appspot.com/img?img_id="+img.key.urlsafe()
+            imageUrlList.append(url)
+            sorted_stream_list.append(img.stream.get())
+
+        streamKeyList = []
+        streamNameList = []
+        for stream in sorted_stream_list:
+            streamKeyList.append(stream.key.urlsafe())
+            streamNameList.append(stream.name)
+
+        dictPassed = {
+            'displayImages': imageUrlList,
+            'streamKeyList': streamKeyList,
+            'streamNameList': streamNameList,
+        }
+
+        jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+        self.response.write(jsonObj)
+
+
+    def haversine(self, lon1, lat1, lon2, lat2):
+        """
+        Calculate the great circle distance between two points
+        on the earth (specified in decimal degrees)
+        """
+        # convert decimal degrees to radians
+        lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * asin(sqrt(a))
+        r = 3956 # Radius of earth in kilometers. Use 3956 for miles. Use 6371 for km.
+        return c * r
+
+
+class Add_Image_mobile(webapp2.RequestHandler):
+    def post(self):
+        # TODO: make photoCaption meaningful
+        streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+        img = Image()
+        img.stream = streamKey
+        img_temp = self.request.get('file')
+        img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+        img.full_size_image = img_temp
+        imgLocation = self.request.get('imgLocation')
+        img.geoPt = ndb.GeoPt(imgLocation)
+        img.put()
+
+        stream = streamKey.get()
+        stream.lastTimeUpload = img.time
+        stream.put()
+
+
+class AddImage(webapp2.RequestHandler):
+    def post(self):
+        imgLocation = self.request.get('imgLocation')
+        if imgLocation != "":
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            img = Image()
+            img.stream = streamKey
+            img_temp = self.request.get('img')
+            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            img.full_size_image = img_temp
+            img.geoPt = ndb.GeoPt(imgLocation)
+            img.put()
+            print "IMG.TIME = "
+            print img.time
+            stream = streamKey.get()
+            stream.lastTimeUpload = img.time
+            stream.put()
+
+            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+        else:
+            # user chose not to share his geo location
+            streamKey = ndb.Key(urlsafe=self.request.get('streamKey'))
+            img = Image()
+            img.stream = streamKey
+            img_temp = self.request.get('img')
+            img.Thumbnail = images.resize(img_temp ,width=300, height=300, crop_to_fit = True)
+            img.full_size_image = img_temp
+            img.put()
+            print "IMG.TIME = "
+            print img.time
+            stream = streamKey.get()
+            stream.lastTimeUpload = img.time
+            stream.put()
+
+            self.redirect('/View_single?streamKey='+streamKey.urlsafe())
+
+
+# imgList = Image.query(Image.stream == stream.key).order(-Image.time).fetch()
+
 
 app = webapp2.WSGIApplication([
     ('/', LandingPage),
@@ -753,4 +955,9 @@ app = webapp2.WSGIApplication([
     ('/checkSubscribeOwnStream', CheckSubscribeOwnStream),
     ('/checkStreamExist', CheckStreamExist),
     ('/checkIsOwner', CheckIsOwner),
+    ('/View_single_mobile', View_single_mobile),
+    ('/View_all_streams_mobile', View_all_streams_mobile),
+    ('/Add_Image_mobile', Add_Image_mobile),
+    ('/Search_mobile', Search_mobile),
+    ('/Search_Nearby_mobile', Search_Nearby_mobile),
 ], debug=True)
