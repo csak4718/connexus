@@ -849,7 +849,7 @@ class Search_Nearby_mobile(webapp2.RequestHandler):
         for img in img_list:
             print "GEO_PT"
             print img.geoPt
-            if img.geoPt == "":
+            if img.geoPt is None:
                 img_list.remove(img)
 
         nearImageList = sorted(img_list, key=lambda k: self.haversine(user_lon, user_lat, k.geoPt.lon, k.geoPt.lat),reverse = True)
