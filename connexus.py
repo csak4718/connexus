@@ -852,12 +852,14 @@ class Search_Nearby_mobile(webapp2.RequestHandler):
             if img.geoPt is None:
                 img_list.remove(img)
 
-        nearImageList = sorted(img_list, key=lambda k: self.haversine(user_lon, user_lat, k.geoPt.lon, k.geoPt.lat),reverse = True)
+        nearImageList = sorted(img_list, key=lambda k: self.haversine(user_lon, user_lat, k.geoPt.lon, k.geoPt.lat),reverse = False)
         imageUrlList = []
+        distanceList = []
         sorted_stream_list = []
         for img in nearImageList:
             url = "http://connexus-fall15.appspot.com/img?img_id="+img.key.urlsafe()
             imageUrlList.append(url)
+            distanceList.append(str(self.haversine(user_lon, user_lat, img.geoPt.lon, img.geoPt.lat)))
             sorted_stream_list.append(img.stream.get())
 
         streamKeyList = []
@@ -870,6 +872,7 @@ class Search_Nearby_mobile(webapp2.RequestHandler):
             'displayImages': imageUrlList,
             'streamKeyList': streamKeyList,
             'streamNameList': streamNameList,
+            'distanceList': distanceList,
         }
 
         jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
