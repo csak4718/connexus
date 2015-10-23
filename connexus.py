@@ -804,7 +804,7 @@ class Search_mobile(webapp2.RequestHandler):
 
         if len(searchtarget) > 0:
             name_result_all = Stream.query().order(-Stream.time).fetch()
-            tag_result_all = Tag.query.fetch()
+            tag_result_all = Tag.query().fetch()
             name_result = []
             tag_result = []
 
@@ -820,7 +820,7 @@ class Search_mobile(webapp2.RequestHandler):
                 else:
                     pass
 
-            result_list = name_result.fetch()
+            result_list = name_result
 
             for names in name_result:
                 streamKey = names.key
