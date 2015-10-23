@@ -878,7 +878,8 @@ class Search_Nearby_mobile(webapp2.RequestHandler):
         for img in nearImageList:
             url = "http://connexus-fall15.appspot.com/img?img_id="+img.key.urlsafe()
             imageUrlList.append(url)
-            distanceList.append(str(self.haversine(user_lon, user_lat, img.geoPt.lon, img.geoPt.lat)))
+            distanceString = format(self.haversine(user_lon, user_lat, img.geoPt.lon, img.geoPt.lat), '.2f')
+            distanceList.append(distanceString)
             sorted_stream_list.append(img.stream.get())
 
         streamKeyList = []
