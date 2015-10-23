@@ -762,6 +762,11 @@ class View_single_mobile(webapp2.RequestHandler):
             'displayImages': imageUrlList,
             'ownerEmail': ownerEmail,
         }
+
+        view=View()
+        view.stream = streamKey
+        view.put()
+
         jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
         self.response.write(jsonObj)
 
