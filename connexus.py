@@ -762,6 +762,11 @@ class View_single_mobile(webapp2.RequestHandler):
             'displayImages': imageUrlList,
             'ownerEmail': ownerEmail,
         }
+
+        view=View()
+        view.stream = streamKey
+        view.put()
+
         jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
         self.response.write(jsonObj)
 
@@ -798,8 +803,22 @@ class Search_mobile(webapp2.RequestHandler):
         searchtarget = self.request.get('searchTerm')
 
         if len(searchtarget) > 0:
-            name_result = Stream.query(searchtarget == Stream.name).order(-Stream.time)
-            tag_result = Tag.query(searchtarget == Tag.name)
+            name_result_all = Stream.query().order(-Stream.time).fetch()
+            tag_result_all = Tag.query.fetch()
+            name_result = []
+            tag_result = []
+
+            for stream in name_result_all:
+                if searchtarget.lower() in stream.name.lower():
+                    name_result.append(stream)
+                else:
+                    pass
+
+            for tag in tag_result_all:
+                if searchtarget.lower() in tag.name.lower():
+                    tag_result.append(tag)
+                else:
+                    pass
 
             result_list = name_result.fetch()
 
